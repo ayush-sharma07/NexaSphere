@@ -7,8 +7,8 @@ const NEXASPHERE_EMAIL = 'nexasphere@glbajajgroup.org';
 
 const VALUES = ['Innovation', 'Collaboration', 'Learning', 'Growth', 'Community', 'Technology', 'Career', 'Mentorship'];
 
-function DynamicIcon({ name, ...props }) {
-  const Icon = LucideIcons[name] || LucideIcons.HelpCircle;
+function DynamicIcon({ name, ...props }: { name: string; [key: string]: any }) {
+  const Icon = (LucideIcons as any)[name] || LucideIcons.HelpCircle;
   return <Icon {...props} />;
 }
 

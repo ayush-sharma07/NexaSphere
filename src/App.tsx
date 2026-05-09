@@ -8,6 +8,7 @@ import './styles/motion.css';
 
 import ParticleBackground from './shared/ParticleBackground';
 import GeometricGridBackground from './shared/GeometricGridBackground';
+// @ts-ignore
 import ScrollProgress from './shared/ScrollProgress';
 import Navbar from './shared/Navbar';
 import HeroSection from './pages/home/HeroSection';
@@ -19,10 +20,11 @@ import Footer from './shared/Footer';
 import ActivityDetailPage from './pages/activities/ActivityDetailPage';
 import EventDetailPage from './pages/events/EventDetailPage';
 import CinematicOpening from './shared/CinematicOpening';
+// @ts-ignore
 import Chatbot from './shared/Chatbot';
 
 import {
-  AmbientOrbs, SectionDivider,
+  AmbientOrbs, SectionDivider, PageFlash,
   useScrollProgress, useNsReveal, useHeroParallax,
   useNavScrollTint, useGlobalMouseParallax, useMagneticCards,
 } from './shared/MotionLayer';
@@ -43,8 +45,8 @@ import { events as fallbackEvents } from './data/eventsData';
 import nexasphereLogo      from './assets/images/logos/nexasphere-logo.png';
 import * as LucideIcons from 'lucide-react';
 
-function DynamicIcon({ name, ...props }) {
-  const Icon = LucideIcons[name] || LucideIcons.HelpCircle;
+function DynamicIcon({ name, ...props }: { name: string; [key: string]: any }) {
+  const Icon = (LucideIcons as any)[name] || LucideIcons.HelpCircle;
   return <Icon {...props} />;
 }
 
@@ -434,7 +436,7 @@ export default function App(): ReactNode {
         <>
           <ScrollProgress />
           <Cursor />
-          <Wipe on={wipeOn} ph={wipePh} />
+          <Wipe on={wipeOn} ph={wipePh as any} />
           <AmbientOrbs theme={theme} />
           <GeometricGridBackground theme={theme} />
           <ParticleBackground theme={theme} />
@@ -443,29 +445,29 @@ export default function App(): ReactNode {
       )}
 
       <main style={{paddingTop:nh,position:'relative',zIndex:1}}>
-        {page?.type==='section'&&page.section==='Activities'&&(
+        {pg?.type==='section'&&pg.section==='Activities'&&(
           <PageIn k="pg-activities">
             <ActivitiesPage onNavigate={onNavigate} onBack={onBackHome}/>
           </PageIn>
         )}
-        {page?.type==='section'&&page.section==='Events'&&(
+        {pg?.type==='section'&&pg.section==='Events'&&(
           <PageIn k="pg-events">
             <EventsPage onBack={onBackHome} onEventClick={onKSSClick} events={eventsData} loading={loading}/>
           </PageIn>
         )}
-        {page?.type==='section'&&page.section==='About'&&(
+        {pg?.type==='section'&&pg.section==='About'&&(
           <PageIn k="pg-about">
             <AboutPage onBack={onBackHome}/>
           </PageIn>
         )}
-        {page?.type==='section'&&page.section==='Team'&&(
+        {pg?.type==='section'&&pg.section==='Team'&&(
           <PageIn k="pg-team">
             <TeamPage onBack={onBackHome} onApply={openApply} team={teamData} loading={loading}/>
           </PageIn>
         )}
         
-        {page?.type==='activity'&&cur&&(
-          <PageIn k={`a-${page.activityKey}`}>
+        {pg?.type==='activity'&&cur&&(
+          <PageIn k={`a-${pg.activityKey}`}>
             <ActivityDetailPage 
               activity={cur} 
               onBack={() => setPage({ type: 'section', section: 'Activities' })} 
@@ -473,26 +475,26 @@ export default function App(): ReactNode {
             />
           </PageIn>
         )}
-        {page?.type==='event'&&page.event&&cur&&(
-          <PageIn k={`e-${page.event?.id}`}>
+        {pg?.type==='event'&&pg.event&&cur&&(
+          <PageIn k={`e-${pg.event?.id}`}>
             {(() => {
-              let displayEvent = page.event;
-              const isKssEvent = page.event.id === 1 || page.event.id === 'kss-153' || String(page.event.shortName || '').toLowerCase().includes('kss');
-              if (page.activityKey === 'Insight Session' && isKssEvent) {
-                displayEvent = cur.conductedEvents?.find(e => e.id === 'kss-153') || page.event;
+              let displayEvent = pg.event;
+              const isKssEvent = pg.event.id === 1 || pg.event.id === 'kss-153' || String(pg.event.shortName || '').toLowerCase().includes('kss');
+              if (pg.activityKey === 'Insight Session' && isKssEvent) {
+                displayEvent = cur.conductedEvents?.find((e: any) => e.id === 'kss-153') || pg.event;
               }
               return <EventDetailPage event={displayEvent} activityColor={cur.color} activityIcon={cur.icon} onBack={onBackAct}/>;
             })()}
           </PageIn>
         )}
 
-        {page?.type === 'apply' && (
+        {pg?.type === 'apply' && (
           <PageIn k="pg-apply">
             <RecruitmentPage onBack={onBackHome} />
           </PageIn>
         )}
 
-        {page?.type === 'join' && (
+        {pg?.type === 'join' && (
           <PageIn k="pg-join">
             <MembershipPage onBack={onBackHome} />
           </PageIn>

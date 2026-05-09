@@ -3,8 +3,8 @@ import { BannerOrbs } from '../../shared/MotionLayer';
 import * as LucideIcons from 'lucide-react';
 
 
-function DynamicIcon({ name, ...props }) {
-  const Icon = LucideIcons[name] || LucideIcons.HelpCircle;
+function DynamicIcon({ name, ...props }: { name: string; [key: string]: any }) {
+  const Icon = (LucideIcons as any)[name] || LucideIcons.HelpCircle;
   return <Icon {...props} />;
 }
 
@@ -27,7 +27,7 @@ const milestones = [
   { year: 'Coming Soon', label: 'Expanding', desc: 'Hackathons, workshops, open-source days and more — all in the pipeline.', icon: 'Telescope' },
 ];
 
-export default function AboutPage({ onBack }: BackProps): ReactNode {
+export default function AboutPage({ onBack }: { onBack: () => void }): ReactNode {
   useEffect(() => {
     window.scrollTo({ top: 0 });
     const obs = new IntersectionObserver(entries => {

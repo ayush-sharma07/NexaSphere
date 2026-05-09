@@ -3,8 +3,8 @@ import { activities } from '../../data/activitiesData';
 import type { ActivityKey, ActivitySummary } from '../../types/activities';
 import * as LucideIcons from 'lucide-react';
 
-function DynamicIcon({ name, ...props }) {
-  const Icon = LucideIcons[name];
+function DynamicIcon({ name, ...props }: { name: string; [key: string]: any }) {
+  const Icon = (LucideIcons as any)[name];
   return Icon ? <Icon {...props} /> : null;
 }
 

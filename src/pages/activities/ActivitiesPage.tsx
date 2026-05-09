@@ -2,9 +2,10 @@ import { type MouseEvent, type ReactNode, useEffect, useRef } from 'react';
 import { activities } from '../../data/activitiesData';
 import { BannerOrbs } from '../../shared/MotionLayer';
 import * as LucideIcons from 'lucide-react';
+import type { ActivitySummary, ActivityKey } from '../../types/activities';
 
-function DynamicIcon({ name, ...props }) {
-  const Icon = LucideIcons[name] || LucideIcons.HelpCircle;
+function DynamicIcon({ name, ...props }: { name: string; [key: string]: any }) {
+  const Icon = (LucideIcons as any)[name] || LucideIcons.HelpCircle;
   return <Icon {...props} />;
 }
 
@@ -29,7 +30,7 @@ function ActivityCard({
   onNavigate: (type: 'activity', title: ActivityKey) => void;
 }): ReactNode {
   const ref = useRef<HTMLDivElement | null>(null);
-  const details = activityDetails[a.title as ActivityKey];
+  const details = (activityDetails as any)[a.title as ActivityKey] || {};
 
   const onMove = (e: MouseEvent<HTMLDivElement>): void => {
     const c = ref.current; if (!c) return;
@@ -125,7 +126,7 @@ function ActivityCard({
   );
 }
 
-export default function ActivitiesPage({ onNavigate, onBack }: ActivitiesPageProps): ReactNode {
+export default function ActivitiesPage({ onNavigate, onBack }: { onNavigate: (type: 'activity', title: ActivityKey) => void; onBack: () => void }): ReactNode {
   useEffect(() => {
     window.scrollTo({ top: 0 });
     const obs = new IntersectionObserver(entries => {
