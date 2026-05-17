@@ -1,4 +1,6 @@
 import { coreTeamService } from '../services/coreTeamService.js';
+import { wrapAsync } from '../middleware/asyncHandler.js';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
 
 function toSafeString(value, max = 4000) {
   return String(value ?? '').trim().slice(0, max);
@@ -63,7 +65,7 @@ export const adminAddCoreTeamMember = wrapAsync(async (req, res) => {
 export const adminDeleteCoreTeamMember = wrapAsync(async (req, res) => {
   const id = String(req.params.id || '').trim();
   const deleted = await coreTeamService.deleteMember(id);
-  if (!deleted) return res.status(404).json({ error: 'Member not found' });
+  if (!deleted) throw new NotFoundError('Member not found');
   return res.json({ ok: true });
 });
 
