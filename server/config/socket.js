@@ -1,135 +1,145 @@
 /**
  * Socket.IO Configuration
- * Handles WebSocket connections for real-time updates
+ * Optimized real-time communication layer
  */
 
 import { Server } from 'socket.io';
 import logger from '../utils/logger.js';
 
-let io = null;
-const connectedUsers = new Map();
-const rooms = {
-  admin: 'admin-room',
-  notifications: 'notifications-room',
-  events: 'events-room',
-};
+let io;
 
-/**
- * Initialize Socket.IO
- * @param {Object} httpServer - HTTP server instance
- */
-export function initializeSocketIO(httpServer) {
-  io = new Server(httpServer, {
+const connectedUsers = new Map();
+
+export const SOCKET_ROOMS = Object.freeze({
+    ADMIN: 'admin-room',
+    NOTIFICATIONS: 'notifications-room',
+    EVENTS: 'events-room',
+});
+
+const socketConfig = {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-      credentials: true,
+        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+        credentials: true,
     },
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     reconnectionAttempts: 5,
-  });
+};
 
-  io.on('connection', (socket) => {
-    logger.info('User connected', { socketId: socket.id });
+const log = (level, message, meta = {}) => logger[level](message, meta);
 
-    // Store connected user
-    socket.on('user:identify', (userData) => {
-      connectedUsers.set(socket.id, {
-        id: userData.userId,
-        email: userData.email,
-        socketId: socket.id,
-        connectedAt: new Date(),
-      });
-      logger.info('User identified', { userId: userData.userId, socketId: socket.id });
+/* ─────────────────────────────
+   Initialize Socket.IO
+───────────────────────────── */
+export const initializeSocketIO = (httpServer) => {
+    io = new Server(httpServer, socketConfig);
+
+    io.on('connection', (socket) => {
+        log('info', 'Socket connected', { socketId: socket.id });
+
+        // User Identification
+        socket.on('user:identify', ({ userId, email }) => {
+            connectedUsers.set(socket.id, {
+                id: userId,
+                email,
+                socketId: socket.id,
+                connectedAt: new Date(),
+            });
+
+            log('info', 'User identified', { userId, socketId: socket.id });
+        });
+
+        // Join Room
+        socket.on('room:join', (room) => {
+            socket.join(room);
+            log('info', 'Joined room', { socketId: socket.id, room });
+        });
+
+        // Leave Room
+        socket.on('room:leave', (room) => {
+            socket.leave(room);
+            log('info', 'Left room', { socketId: socket.id, room });
+        });
+
+        // Error Handling
+        socket.on('error', (error) => {
+            log('error', 'Socket error', {
+                socketId: socket.id,
+                error: error.message,
+            });
+        });
+
+        // Disconnect
+        socket.on('disconnect', () => {
+            connectedUsers.delete(socket.id);
+            log('info', 'Socket disconnected', { socketId: socket.id });
+        });
     });
 
-    // Join notification room
-    socket.on('room:join', (roomName) => {
-      socket.join(roomName);
-      logger.info('User joined room', { socketId: socket.id, room: roomName });
-    });
+    return io;
+};
 
-    // Leave room
-    socket.on('room:leave', (roomName) => {
-      socket.leave(roomName);
-      logger.info('User left room', { socketId: socket.id, room: roomName });
-    });
+/* ─────────────────────────────
+   Get IO Instance
+───────────────────────────── */
+export const getIO = () => {
+    if (!io) throw new Error('Socket.IO not initialized');
+    return io;
+};
 
-    // Handle disconnection
-    socket.on('disconnect', () => {
-      connectedUsers.delete(socket.id);
-      logger.info('User disconnected', { socketId: socket.id });
-    });
+/* ─────────────────────────────
+   Emit Helpers
+───────────────────────────── */
+export const broadcastEvent = (event, data) => {
+    if (!io) return;
+    io.emit(event, data);
 
-    // Error handling
-    socket.on('error', (error) => {
-      logger.error('Socket error', { error: error.message, socketId: socket.id });
-    });
-  });
+    log('debug', 'Broadcast event', { event });
+};
 
-  return io;
-}
+export const emitToRoom = (room, event, data) => {
+    if (!io) return;
+    io.to(room).emit(event, data);
 
-/**
- * Get Socket.IO instance
- */
-export function getIO() {
-  if (!io) {
-    throw new Error('Socket.IO not initialized');
-  }
-  return io;
-}
+    log('debug', 'Room event emitted', { room, event });
+};
 
-/**
- * Emit event to all connected clients
- */
-export function broadcastEvent(eventName, data) {
-  if (!io) return;
-  io.emit(eventName, data);
-  logger.debug('Broadcast event', { event: eventName });
-}
+export const emitToUser = (userId, event, data) => {
+    if (!io) return;
 
-/**
- * Emit event to specific room
- */
-export function emitToRoom(roomName, eventName, data) {
-  if (!io) return;
-  io.to(roomName).emit(eventName, data);
-  logger.debug('Emit to room', { room: roomName, event: eventName });
-}
+    const user = [...connectedUsers.values()].find(
+        ({ id }) => id === userId
+    );
 
-/**
- * Emit event to specific user
- */
-export function emitToUser(userId, eventName, data) {
-  if (!io) return;
-  const user = Array.from(connectedUsers.values()).find(u => u.id === userId);
-  if (user) {
-    io.to(user.socketId).emit(eventName, data);
-    logger.debug('Emit to user', { userId, event: eventName });
-  }
-}
+    if (!user) return;
 
-/**
- * Get connected users count
- */
-export function getConnectedUsersCount() {
-  return connectedUsers.size;
-}
+    io.to(user.socketId).emit(event, data);
 
-/**
- * Get all connected users
- */
-export function getConnectedUsers() {
-  return Array.from(connectedUsers.values());
-}
+    log('debug', 'User event emitted', { userId, event });
+};
 
-/**
- * Get room reference
- */
-export function getRoom(roomType) {
-  return rooms[roomType] || null;
-}
+/* ─────────────────────────────
+   User Utilities
+───────────────────────────── */
+export const getConnectedUsersCount = () => connectedUsers.size;
 
-export default { initializeSocketIO, getIO, broadcastEvent, emitToRoom, emitToUser };
+export const getConnectedUsers = () => [
+    ...connectedUsers.values(),
+];
+
+export const getRoom = (type) => SOCKET_ROOMS[type ? .toUpperCase()] || null;
+
+/* ─────────────────────────────
+   Default Export
+───────────────────────────── */
+export default {
+    initializeSocketIO,
+    getIO,
+    broadcastEvent,
+    emitToRoom,
+    emitToUser,
+    getConnectedUsers,
+    getConnectedUsersCount,
+    getRoom,
+};

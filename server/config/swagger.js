@@ -1,184 +1,197 @@
 /**
- * Swagger/OpenAPI Configuration
- * Generates interactive API documentation
+ * Swagger / OpenAPI Configuration
+ * API Documentation Setup
  */
 
-import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerJsdoc from "swagger-jsdoc";
 
-const options = {
+const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.nexasphere.com"
+    : "http://localhost:3000";
+
+const createSchema = (properties, required = []) => ({
+  type: "object",
+  required,
+  properties,
+});
+
+const specs = swaggerJsdoc({
   definition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
+
     info: {
-      title: 'NexaSphere API',
-      version: '1.0.0',
-      description: 'Real-time event management platform with live updates, notifications, and team collaboration.',
+      title: "NexaSphere API",
+      version: "1.0.0",
+      description:
+        "Real-time event management platform with notifications, live updates, and collaboration features.",
       contact: {
-        name: 'NexaSphere Team',
-        email: 'support@nexasphere.com',
-        url: 'https://nexasphere.com',
+        name: "NexaSphere Team",
+        email: "support@nexasphere.com",
+        url: "https://nexasphere.com",
       },
       license: {
-        name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT',
+        name: "MIT",
+        url: "https://opensource.org/licenses/MIT",
       },
     },
+
     servers: [
       {
-        url: 'http://localhost:3000',
-        description: 'Development server',
-      },
-      {
-        url: 'https://api.nexasphere.com',
-        description: 'Production server',
+        url: API_URL,
+        description:
+          process.env.NODE_ENV === "production"
+            ? "Production Server"
+            : "Development Server",
       },
     ],
+
+    security: [{ bearerAuth: [] }],
+
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          description: 'JWT Bearer token for authentication',
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "JWT authentication token",
         },
+
         apiKey: {
-          type: 'apiKey',
-          in: 'header',
-          name: 'X-API-Key',
-          description: 'API Key for service-to-service authentication',
+          type: "apiKey",
+          in: "header",
+          name: "X-API-Key",
+          description: "Service authentication API key",
         },
       },
+
       schemas: {
-        Event: {
-          type: 'object',
-          required: ['name', 'date', 'location'],
-          properties: {
+        Event: createSchema(
+          {
             id: {
-              type: 'string',
-              format: 'uuid',
-              description: 'Event unique identifier',
+              type: "string",
+              format: "uuid",
+              description: "Event identifier",
             },
+
             name: {
-              type: 'string',
-              description: 'Event name',
-              example: 'Tech Workshop 2024',
+              type: "string",
+              example: "Tech Workshop 2024",
             },
+
             description: {
-              type: 'string',
-              description: 'Event description',
+              type: "string",
             },
+
             date: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Event date and time',
-              example: '2024-06-15T10:00:00Z',
+              type: "string",
+              format: "date-time",
+              example: "2024-06-15T10:00:00Z",
             },
+
             location: {
-              type: 'string',
-              description: 'Event location',
-              example: 'Building A, Room 101',
+              type: "string",
+              example: "Building A, Room 101",
             },
+
             capacity: {
-              type: 'integer',
+              type: "integer",
               minimum: 1,
-              description: 'Maximum attendees',
               example: 50,
             },
+
             registrations: {
-              type: 'integer',
-              description: 'Current registration count',
+              type: "integer",
               example: 25,
             },
+
             status: {
-              type: 'string',
-              enum: ['upcoming', 'ongoing', 'completed', 'cancelled'],
-              description: 'Event status',
+              type: "string",
+              enum: ["upcoming", "ongoing", "completed", "cancelled"],
             },
+
             createdAt: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Event creation timestamp',
+              type: "string",
+              format: "date-time",
             },
+
             updatedAt: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Event last update timestamp',
+              type: "string",
+              format: "date-time",
             },
           },
-        },
-        User: {
-          type: 'object',
-          required: ['email', 'name'],
-          properties: {
+          ["name", "date", "location"],
+        ),
+
+        User: createSchema(
+          {
             id: {
-              type: 'string',
-              format: 'uuid',
+              type: "string",
+              format: "uuid",
             },
+
             email: {
-              type: 'string',
-              format: 'email',
-              example: 'user@example.com',
+              type: "string",
+              format: "email",
+              example: "user@example.com",
             },
+
             name: {
-              type: 'string',
-              example: 'John Doe',
+              type: "string",
+              example: "John Doe",
             },
+
             role: {
-              type: 'string',
-              enum: ['user', 'admin', 'organizer'],
-              default: 'user',
+              type: "string",
+              enum: ["user", "admin", "organizer"],
+              default: "user",
             },
+
             createdAt: {
-              type: 'string',
-              format: 'date-time',
+              type: "string",
+              format: "date-time",
             },
           },
-        },
-        Error: {
-          type: 'object',
-          properties: {
-            success: {
-              type: 'boolean',
-              example: false,
-            },
-            error: {
-              type: 'string',
-              example: 'Error message',
-            },
-            statusCode: {
-              type: 'integer',
-              example: 400,
-            },
+          ["email", "name"],
+        ),
+
+        Error: createSchema({
+          success: {
+            type: "boolean",
+            example: false,
           },
-        },
-        Success: {
-          type: 'object',
-          properties: {
-            success: {
-              type: 'boolean',
-              example: true,
-            },
-            data: {
-              type: 'object',
-            },
-            message: {
-              type: 'string',
-            },
+
+          error: {
+            type: "string",
+            example: "Error message",
           },
-        },
+
+          statusCode: {
+            type: "integer",
+            example: 400,
+          },
+        }),
+
+        Success: createSchema({
+          success: {
+            type: "boolean",
+            example: true,
+          },
+
+          data: {
+            type: "object",
+          },
+
+          message: {
+            type: "string",
+            example: "Operation successful",
+          },
+        }),
       },
     },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
   },
-  apis: [
-    './server/routes/*.js',
-    './server/swagger-docs/*.js',
-  ],
-};
 
-const specs = swaggerJsdoc(options);
+  apis: ["./server/routes/*.js", "./server/swagger-docs/*.js"],
+});
 
 export default specs;
