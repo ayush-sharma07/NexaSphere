@@ -182,3 +182,5 @@ const options = {
 const specs = swaggerJsdoc(options);
 
 export default specs;
+
+<!-- modified for NSoC_2026 -->
