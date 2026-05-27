@@ -110,17 +110,31 @@ function ModalContent({ member, onClose }) {
 
             {member.whatsapp && (
               <div style={{ position: 'relative' }}>
-                <button
-                  className="modal-social-btn btn-whatsapp"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActivePopup(activePopup === 'whatsapp' ? null : 'whatsapp');
-                  }}
-                >
-                  💬 WhatsApp
-                </button>
-                {activePopup === 'whatsapp' && (
-                  <CopyPopup value={whatsappValue} onClose={() => setActivePopup(null)} />
+                {whatsappValue.startsWith('http') ? (
+                  <a
+                    href={whatsappValue}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="modal-social-btn btn-whatsapp"
+                    style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    💬 WhatsApp
+                  </a>
+                ) : (
+                  <>
+                    <button
+                      className="modal-social-btn btn-whatsapp"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePopup(activePopup === 'whatsapp' ? null : 'whatsapp');
+                      }}
+                    >
+                      💬 WhatsApp
+                    </button>
+                    {activePopup === 'whatsapp' && (
+                      <CopyPopup value={whatsappValue} onClose={() => setActivePopup(null)} />
+                    )}
+                  </>
                 )}
               </div>
             )}

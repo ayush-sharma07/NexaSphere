@@ -2,8 +2,8 @@ import { supabaseRequest, HAS_SUPABASE } from '../storage/supabaseClient.js';
 import { readContent, writeContent } from '../storage/contentFileStore.js';
 import { sanitizeCoreTeamMemberRecord } from '../utils/sanitize.js';
 import crypto from 'crypto';
-import { coreTeamRepository } from '../repositories/coreTeamRepository.js';
-import { manageActivityGateSchema } from '../validators/coreTeamSchemas.js';
+import { coreTeamMemberSchema, normalizeCoreTeamGate } from '../schemas/coreTeamMemberSchema.js';
+import { UnauthorizedError } from '../utils/errors.js';
 
 const fallbackMembers = [
   { name: 'Ayush Sharma', email: 'ayush.sharmaa@hotmail.com', phone: '8923995135' },

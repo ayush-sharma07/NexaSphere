@@ -10,6 +10,32 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
   const [view, setView] = useState('timeline');
   const [recommendationView, setRecommendationView] = useState(false);
 
+  // Auto-detect: if date has passed, treat as completed regardless of stored status
+  const now = Date.now();
+  const parseDate = ev => {
+    const raw = ev.dateText ?? ev.date ?? '';
+    const d = new Date(raw);
+    return isNaN(d) ? null : d;
+  };
+  const getEffectiveStatus = ev => {
+    if (ev.status === 'completed') return 'completed';
+    const d = parseDate(ev);
+    if (d && d.getTime() < now) return 'completed'; // date passed → auto-complete
+    return ev.status || 'upcoming';
+  };
+
+  // Sort: upcoming first (earliest date first), then completed (most recent first)
+  const sortedEvents = [...events]
+    .map(ev => ({ ...ev, status: getEffectiveStatus(ev) }))
+    .sort((a, b) => {
+      const aIsUpcoming = a.status !== 'completed';
+      const bIsUpcoming = b.status !== 'completed';
+      if (aIsUpcoming !== bIsUpcoming) return bIsUpcoming ? 1 : -1;
+      const da = parseDate(a)?.getTime() ?? 0;
+      const db = parseDate(b)?.getTime() ?? 0;
+      return aIsUpcoming ? da - db : db - da;
+    });
+
   useEffect(() => {
     window.scrollTo({ top: 0 });
     const obs = new IntersectionObserver(entries => {
@@ -134,11 +160,11 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
 
       <div className="container">
         {recommendationView ? (
-          <PersonalizedFeed events={events} onEventClick={onEventClick} />
+          <PersonalizedFeed events={sortedEvents} onEventClick={onEventClick} />
         ) : view === 'timeline' ? (
           <div className="events-timeline ns-reveal">
-            {events.map((ev, i) => {
-              const isKSS = ev.id === 1 || ev.id === 'kss-153' || String(ev.shortName || '').toLowerCase().includes('kss');
+            {sortedEvents.map((ev, i) => {
+              const hasDetailPage = !!ev.hasDetailPage;
               return (
                 <div className="timeline-item" key={ev.id}>
                   <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
@@ -146,16 +172,16 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
                     className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
                     style={{
                       animationDelay: `${i * .11}s`,
-                      cursor: isKSS ? 'pointer' : 'default',
+                      cursor: hasDetailPage ? 'pointer' : 'default',
                       transition: 'all .28s ease',
                     }}
-                    onClick={isKSS ? () => onEventClick(ev) : undefined}
-                    onMouseEnter={isKSS ? e => {
+                    onClick={hasDetailPage ? () => onEventClick(ev) : undefined}
+                    onMouseEnter={hasDetailPage ? e => {
                       e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
                       e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
                       e.currentTarget.style.transform = 'translateY(-4px)';
                     } : undefined}
-                    onMouseLeave={isKSS ? e => {
+                    onMouseLeave={hasDetailPage ? e => {
                       e.currentTarget.style.borderColor = '';
                       e.currentTarget.style.boxShadow = '';
                       e.currentTarget.style.transform = '';
@@ -163,8 +189,8 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
                       <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
-                      <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>
-                      {isKSS && (
+                      <div className="timeline-event-name" style={hasDetailPage ? { color: '#a855f7' } : {}}>{ev.name}</div>
+                      {hasDetailPage && (
                         <span style={{
                           marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
                           borderRadius: '10px', background: 'rgba(168,85,247,.12)',
@@ -199,14 +225,14 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
 
             <div className="timeline-item">
               <div className="timeline-dot upcoming" />
-              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${events.length * .11}s` }}>
+              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${sortedEvents.length * .11}s` }}>
                 <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
                 <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
               </div>
             </div>
           </div>
         ) : (
-          <EventCalendarView events={events} onEventClick={onEventClick} />
+          <EventCalendarView events={sortedEvents} onEventClick={onEventClick} />
         )}
       </div>
 
