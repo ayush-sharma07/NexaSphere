@@ -177,8 +177,8 @@ function SectionContent({ page, eventsData, actions }) {
 
 function EventContent({ page, currentActivity, onBack }) {
   const displayEvent = useMemo(() => {
-    const isKssEvent = page.event.id === 1 || page.event.id === 'kss-153' || String(page.event.shortName || '').toLowerCase().includes('kss');
-    if (page.activityKey === 'Insight Session' && isKssEvent) {
+    const hasDetailPage = !!page.event.hasDetailPage;
+    if (page.activityKey === 'Insight Session' && hasDetailPage) {
       return currentActivity.conductedEvents?.find(e => e.id === 'kss-153') || page.event;
     }
     return page.event;

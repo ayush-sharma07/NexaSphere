@@ -1,164 +1,107 @@
-import { useState, useEffect } from 'react';
-import { events as fallbackEvents } from '../../data/eventsData';
-import { BannerOrbs } from '../../shared/MotionLayer';
-import Footer from '../../shared/Footer';
-import { DynamicIcon } from '../../shared/Icons';
-import PersonalizedFeed from '../../components/recommendation/PersonalizedFeed';
-import EventCalendarView from '../../components/calendar/EventCalendarView';
-import SchedulingAssistant from '../../components/scheduling/SchedulingAssistant';
+import React, { useState } from 'react';
+import DynamicIcon from '../../components/common/DynamicIcon';
+import SchedulingAssistant from '../../components/events/SchedulingAssistant';
+import PersonalizedFeed from '../../components/events/PersonalizedFeed';
 
-export default function EventsPage({ onBack, onEventClick, events = fallbackEvents }) {
-  const [view, setView] = useState('timeline');
-  const [recommendationView, setRecommendationView] = useState(false);
+const EventsPage = ({ events = [], onEventClick }) => {
   const [scheduleView, setScheduleView] = useState(false);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0 });
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('fired'); obs.unobserve(e.target); } });
-    }, { threshold: 0, rootMargin: '0px 0px -10px 0px' });
-    document.querySelectorAll('#events-page .pop-in, #events-page .pop-left, #events-page .pop-right, #events-page .pop-word').forEach(el => obs.observe(el));
-    return () => obs.disconnect();
-  }, []);
+  const [recommendationView, setRecommendationView] = useState(false);
+  const [view, setView] = useState('timeline');
+  
+  const sortedEvents = [...events].sort((a, b) => {
+    return new Date(a.date) - new Date(b.date);
+  });
 
   return (
-    <div id="events-page" style={{ minHeight: '100vh', padding: '0 0 100px' }}>
-      
-      <div className="page-banner" style={{
-        background: 'linear-gradient(135deg, rgba(0,212,255,.06), rgba(123,111,255,.04))',
-        borderBottom: '1px solid var(--bdr)',
-        padding: '70px 0 50px',
-        textAlign: 'center',
-        marginBottom: '60px',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div className="page-banner-line" style={{ position:'absolute',top:0,left:0,right:0,height:'3px',background:'linear-gradient(90deg,var(--c1),var(--c2),var(--c3))' }}/>
-        <BannerOrbs color="rgba(123,111,255,.06)"/>
-        <button onClick={onBack} className="ns-back-btn" style={{
-          position: 'absolute', top: '24px', left: '28px',
-          background: 'var(--card)', border: '1px solid var(--bdr)',
-          borderRadius: '50px', padding: '7px 16px',
-          color: 'var(--t2)', fontSize: '.8rem', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: '6px',
-          fontFamily: "'Rajdhani', sans-serif", fontWeight: 600,
-        }}>← Back</button>
+    <div className="events-page">
+      <div className="events-header">
+        <div className="container">
+          <h1 className="page-title">Events</h1>
+          <p className="page-subtitle">Discover and manage your upcoming events</p>
+        </div>
+      </div>
 
-        <span className="cin-section-label pop-in" style={{position:'relative',zIndex:1}}>NexaSphere · GL Bajaj</span>
-        <h1 className="section-title pop-word" style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', position:'relative',zIndex:1 }}>Our Events</h1>
-        <p className="section-subtitle pop-in" style={{ animationDelay: '.1s', maxWidth: '520px', margin: '0 auto', position:'relative',zIndex:1 }}>
-          Where ideas come to life. Every event is a milestone in the NexaSphere journey.
-        </p>
+      <div className="events-controls">
+        <div className="container">
+          <div className="view-buttons">
+            <button
+              onClick={() => {
+                setScheduleView(false);
+                setRecommendationView(false);
+                setView('timeline');
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 20px',
+                background: !scheduleView && !recommendationView && view === 'timeline' ? 'var(--c1)' : 'transparent',
+                border: !scheduleView && !recommendationView && view === 'timeline' ? 'none' : '1px solid var(--bdr)',
+                borderRadius: '100px',
+                color: !scheduleView && !recommendationView && view === 'timeline' ? 'white' : 'var(--t2)',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 500,
+                transition: 'all 0.2s ease',
+                fontFamily: "'Rajdhani', sans-serif"
+              }}
+            >
+              <DynamicIcon name="Calendar" size={16} />
+              Timeline
+            </button>
 
-        {/* View Toggle Buttons */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: '12px', 
-          marginTop: '32px',
-          position: 'relative',
-          zIndex: 2,
-          flexWrap: 'wrap'
-        }}>
-          <button
-            onClick={() => {
-              setView('timeline');
-              setRecommendationView(false);
-              setScheduleView(false);
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 20px',
-              background: !recommendationView && !scheduleView && view === 'timeline' ? 'var(--c1)' : 'transparent',
-              border: !recommendationView && !scheduleView && view === 'timeline' ? 'none' : '1px solid var(--bdr)',
-              borderRadius: '100px',
-              color: !recommendationView && !scheduleView && view === 'timeline' ? 'white' : 'var(--t2)',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 500,
-              transition: 'all 0.2s ease',
-              fontFamily: "'Rajdhani', sans-serif"
-            }}
-          >
-            <DynamicIcon name="List" size={16} />
-            Timeline View
-          </button>
-          <button
-            onClick={() => {
-              setView('calendar');
-              setRecommendationView(false);
-              setScheduleView(false);
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 20px',
-              background: !recommendationView && !scheduleView && view === 'calendar' ? 'var(--c1)' : 'transparent',
-              border: !recommendationView && !scheduleView && view === 'calendar' ? 'none' : '1px solid var(--bdr)',
-              borderRadius: '100px',
-              color: !recommendationView && !scheduleView && view === 'calendar' ? 'white' : 'var(--t2)',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 500,
-              transition: 'all 0.2s ease',
-              fontFamily: "'Rajdhani', sans-serif"
-            }}
-          >
-            <DynamicIcon name="Calendar" size={16} />
-            Calendar View
-          </button>
-          <button
-            onClick={() => {
-              setRecommendationView(true);
-              setView('timeline');
-              setScheduleView(false);
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 20px',
-              background: recommendationView ? 'var(--c1)' : 'transparent',
-              border: recommendationView ? 'none' : '1px solid var(--bdr)',
-              borderRadius: '100px',
-              color: recommendationView ? 'white' : 'var(--t2)',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 500,
-              transition: 'all 0.2s ease',
-              fontFamily: "'Rajdhani', sans-serif"
-            }}
-          >
-            <DynamicIcon name="Sparkles" size={16} />
-            For You
-          </button>
-          <button
-            onClick={() => {
-              setScheduleView(true);
-              setView('timeline');
-              setRecommendationView(false);
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 20px',
-              background: scheduleView ? 'var(--c1)' : 'transparent',
-              border: scheduleView ? 'none' : '1px solid var(--bdr)',
-              borderRadius: '100px',
-              color: scheduleView ? 'white' : 'var(--t2)',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 500,
-              transition: 'all 0.2s ease',
-              fontFamily: "'Rajdhani', sans-serif"
-            }}
-          >
-            <DynamicIcon name="Zap" size={16} />
-            Smart Schedule
-          </button>
+            <button
+              onClick={() => {
+                setScheduleView(false);
+                setRecommendationView(true);
+                setView('timeline');
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 20px',
+                background: recommendationView ? 'var(--c1)' : 'transparent',
+                border: recommendationView ? 'none' : '1px solid var(--bdr)',
+                borderRadius: '100px',
+                color: recommendationView ? 'white' : 'var(--t2)',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 500,
+                transition: 'all 0.2s ease',
+                fontFamily: "'Rajdhani', sans-serif"
+              }}
+            >
+              <DynamicIcon name="Sparkles" size={16} />
+              For You
+            </button>
+
+            <button
+              onClick={() => {
+                setScheduleView(true);
+                setView('timeline');
+                setRecommendationView(false);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 20px',
+                background: scheduleView ? 'var(--c1)' : 'transparent',
+                border: scheduleView ? 'none' : '1px solid var(--bdr)',
+                borderRadius: '100px',
+                color: scheduleView ? 'white' : 'var(--t2)',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 500,
+                transition: 'all 0.2s ease',
+                fontFamily: "'Rajdhani', sans-serif"
+              }}
+            >
+              <DynamicIcon name="Zap" size={16} />
+              Smart Schedule
+            </button>
+          </div>
         </div>
       </div>
 
@@ -166,11 +109,11 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
         {scheduleView ? (
           <SchedulingAssistant events={events} onEventClick={onEventClick} />
         ) : recommendationView ? (
-          <PersonalizedFeed events={events} onEventClick={onEventClick} />
+          <PersonalizedFeed events={sortedEvents} onEventClick={onEventClick} />
         ) : view === 'timeline' ? (
           <div className="events-timeline ns-reveal">
-            {events.map((ev, i) => {
-              const isKSS = ev.id === 1 || ev.id === 'kss-153' || String(ev.shortName || '').toLowerCase().includes('kss');
+            {sortedEvents.map((ev, i) => {
+              const hasDetailPage = !!ev.hasDetailPage;
               return (
                 <div className="timeline-item" key={ev.id}>
                   <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
@@ -178,71 +121,51 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
                     className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
                     style={{
                       animationDelay: `${i * .11}s`,
-                      cursor: isKSS ? 'pointer' : 'default',
+                      cursor: hasDetailPage ? 'pointer' : 'default',
                       transition: 'all .28s ease',
                     }}
-                    onClick={isKSS ? () => onEventClick(ev) : undefined}
-                    onMouseEnter={isKSS ? e => {
-                      e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
-                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                    } : undefined}
-                    onMouseLeave={isKSS ? e => {
-                      e.currentTarget.style.borderColor = '';
-                      e.currentTarget.style.boxShadow = '';
-                      e.currentTarget.style.transform = '';
-                    } : undefined}
+                    onClick={() => hasDetailPage && onEventClick?.(ev)}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
-                      <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
-                      <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>
-                      {isKSS && (
-                        <span style={{
-                          marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
-                          borderRadius: '10px', background: 'rgba(168,85,247,.12)',
-                          color: '#a855f7', border: '1px solid rgba(168,85,247,.3)',
-                          fontFamily: "'Space Mono', monospace", whiteSpace: 'nowrap',
-                        }}>View Details →</span>
-                      )}
-                    </div>
-                    <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <DynamicIcon name="Calendar" size={14} /> {ev.date}
-                    </div>
-                    <p className="timeline-event-desc">{ev.description}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                      <span className={`timeline-badge ${ev.status}`}>
-                        {ev.status === 'completed' ? (
-                          <><DynamicIcon name="CheckCircle" size={14} style={{ marginRight: '4px' }} /> Completed</>
-                        ) : (
-                          <><DynamicIcon name="Calendar" size={14} style={{ marginRight: '4px' }} /> Upcoming</>
+                    <div className="timeline-card-content">
+                      <div className="timeline-date">
+                        <span className="timeline-day">
+                          {new Date(ev.date).toLocaleDateString('en-US', { day: 'numeric' })}
+                        </span>
+                        <span className="timeline-month">
+                          {new Date(ev.date).toLocaleDateString('en-US', { month: 'short' })}
+                        </span>
+                      </div>
+                      <div className="timeline-details">
+                        <h3 className="timeline-title">{ev.title}</h3>
+                        <div className="timeline-meta">
+                          <span className="timeline-time">
+                            <DynamicIcon name="Clock" size={14} />
+                            {ev.time || 'Time TBD'}
+                          </span>
+                          <span className="timeline-location">
+                            <DynamicIcon name="MapPin" size={14} />
+                            {ev.location || 'Location TBD'}
+                          </span>
+                        </div>
+                        {ev.description && (
+                          <p className="timeline-description">{ev.description}</p>
                         )}
-                      </span>
-                      {ev.tags?.map(t => (
-                        <span key={t} style={{
-                          fontSize: '.68rem', padding: '2px 8px', borderRadius: '10px',
-                          background: 'var(--c2a)', color: 'var(--c2)', border: '1px solid var(--c2b)', fontWeight: 600,
-                        }}>{t}</span>
-                      ))}
+                      </div>
+                      {ev.status === 'upcoming' && (
+                        <div className="timeline-badge">
+                          <span className="badge">Upcoming</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               );
             })}
-
-            <div className="timeline-item">
-              <div className="timeline-dot upcoming" />
-              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${events.length * .11}s` }}>
-                <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
-                <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
-              </div>
-            </div>
           </div>
-        ) : (
-          <EventCalendarView events={events} onEventClick={onEventClick} />
-        )}
+        ) : null}
       </div>
-
-      <Footer />
     </div>
   );
-}
+};
+
+export default EventsPage;

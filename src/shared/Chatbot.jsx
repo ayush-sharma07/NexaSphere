@@ -2,10 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import '../styles/chatbot.css';
 
 const Chatbot = () => {
+  const aiApiUrl = import.meta.env.VITE_AI_API_URL;
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
-    { role: 'bot', text: 'Nexa-Intelligence Online. How can I assist your journey?' }
+    {
+      role: 'bot',
+      text: aiApiUrl
+        ? 'Nexa-Intelligence Online. How can I assist your journey?'
+        : 'Our AI assistant is currently offline. Please reach out via the Contact page.'
+    }
   ]);
   const scrollRef = useRef(null);
 
@@ -24,15 +30,22 @@ const Chatbot = () => {
     setInput('');
 
     try {
-      const response = await fetch('http://localhost:8000/ai/chat', {
+      const baseUrl = aiApiUrl;
+      if (!baseUrl) {
+        throw new Error('AI URL not configured');
+      }
+      const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: currentInput }),
       });
+      if (!response.ok) {
+        throw new Error('Server returned error status');
+      }
       const data = await response.json();
       setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Nexa-AI: Core Link Failure. Try again.' }]);
+      setMessages(prev => [...prev, { role: 'bot', text: 'Our AI assistant is currently offline. Please reach out via the Contact page.' }]);
     }
   };
 

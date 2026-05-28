@@ -8,9 +8,18 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { sendWelcomeVerificationEmail } from './services/emailService.js';
 import { ZodError } from 'zod';
+import { EventEmitter } from 'events';
 import { normalizeFormSubmission } from './validators/formSchemas.js';
-import * as adminAuthMiddleware from './middleware/adminAuthMiddleware.js';
+import { adminAuthMiddleware } from './middleware/adminAuthMiddleware.js';
 import analyticsRouter from './routes/analytics.js';
+
+// Import required controllers and services
+import * as eventsController from './controllers/eventsController.js';
+import * as activityEventsController from './controllers/activityEventsController.js';
+import * as coreTeamController from './controllers/coreTeamController.js';
+import * as formsController from './controllers/formsController.js';
+import { eventsService } from './services/eventsService.js';
+import { coreTeamService } from './services/coreTeamService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,7 +58,6 @@ function requestLogger(req, res, next) {
 app.use(requestLogger);
 
 const adminAuth = adminAuthMiddleware.requireAdmin;
-const adminEvents = new EventEmitter();
 adminEvents.on('CORE_TEAM_MEMBER_ADDED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_ADDED:`, event));
 adminEvents.on('CORE_TEAM_MEMBER_REMOVED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_REMOVED:`, event));
 
@@ -168,9 +176,6 @@ function sanitizeEvent(input = {}) {
 function normalizePhone(value) {
   return String(value || '').replace(/[^\d]/g, '');
 }
-
-app.on('CORE_TEAM_MEMBER_ADDED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_ADDED:`, event));
-app.on('CORE_TEAM_MEMBER_REMOVED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_REMOVED:`, event));
 
 async function listEventsStore() {
   if (HAS_SUPABASE) {
@@ -502,10 +507,21 @@ app.post('/api/admin/events', adminAuth, eventsController.adminCreateEvent);
 app.put('/api/admin/events/:id', adminAuth, eventsController.adminUpdateEvent);
 app.delete('/api/admin/events/:id', adminAuth, eventsController.adminDeleteEvent);
 
-app.get('/api/content/core-team', async (req, res) => {
+app.get('/api/content/team', async (req, res) => {
   try {
-    const members = await coreTeamService.listMembers();
-    return res.json(members);
+    const rawMembers = await coreTeamService.listMembers();
+    const members = (rawMembers || []).map(m => {
+      let email = m.email || null;
+      if (email && !email.toLowerCase().endsWith('@glbajajgroup.org')) {
+        email = null; // hide personal emails entirely
+      }
+      return {
+        ...m,
+        email,
+        whatsapp: 'https://chat.whatsapp.com/FhpJEaod2g419jFMfqrhGZ' // official community link
+      };
+    });
+    return res.json({ members });
   } catch (e) {
     return res.status(500).json({ error: e?.message || 'Failed to load core team' });
   }
@@ -515,44 +531,12 @@ app.get('/api/admin/core-team', adminAuth, coreTeamController.adminListCoreTeamM
 app.post('/api/admin/core-team', adminAuth, coreTeamController.adminAddCoreTeamMember);
 app.delete('/api/admin/core-team/:id', adminAuth, coreTeamController.adminDeleteCoreTeamMember);
 
-app.get('/api/admin/core-team', adminAuth, coreTeamController.adminListCoreTeamMembers);
-app.post('/api/admin/core-team', adminAuth, coreTeamController.adminAddCoreTeamMember);
-app.delete('/api/admin/core-team/:id', adminAuth, coreTeamController.adminDeleteCoreTeamMember);
-
-    const savedToSupabase = await appendToSupabaseForms(formType, payload);
-    try {
-      await appendFormToSheet(formType, payload);
-    } catch (sheetErr) {
-      if (!savedToSupabase) throw sheetErr;
-    }
-
-    // NEW: Send a welcome email to the user
-    try {
-      const verifyUrl = `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/verify?email=${encodeURIComponent(req.body.collegeEmail)}`;
-      await sendWelcomeVerificationEmail(req.body.collegeEmail, req.body.fullName, verifyUrl);
-    } catch (emailErr) {
-      console.error('[Form Handler] Failed to send welcome email:', emailErr);
-      // We don't fail the whole request if email fails, but we log it.
-    }
-
-    return res.json({ ok: true });
-  } catch (e) {
-    if (e instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Invalid form submission',
-        issues: e.issues.map((issue) => ({
-          path: issue.path.join('.'),
-          message: issue.message,
-        })),
-      });
-    }
-    return res.status(500).json({ error: e?.message || 'Submission failed' });
-  }
-}
-
 app.post('/api/forms/membership', formsController.makeHandleForm('membership'));
 app.post('/api/forms/recruitment', formsController.makeHandleForm('recruitment'));
 app.post('/api/core-team/apply', formsController.makeHandleForm('core_team'));
+
+app.post('/api/submissions/membership', formsController.makeHandleForm('membership'));
+app.post('/api/submissions/recruitment', formsController.makeHandleForm('recruitment'));
 
 const port = Number(process.env.PORT || 8787);
 if (!process.env.VERCEL) {

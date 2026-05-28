@@ -54,7 +54,7 @@ export default function EventsSection({ onEventClick, events = [] }) {
         </div>
         <div className="events-timeline">
           {sortedEvents.map((ev,i)=>{
-            const isKSS = ev.id === 1 || ev.id === 'kss-153' || String(ev.shortName || '').toLowerCase().includes('kss');
+            const hasDetailPage = !!ev.hasDetailPage;
             return (
               <div className="timeline-item" key={ev.id}>
                 <div className={`timeline-dot${ev._effectiveStatus === 'upcoming' ? ' upcoming' : ''}`}/>
@@ -62,16 +62,16 @@ export default function EventsSection({ onEventClick, events = [] }) {
                   className={`timeline-card shimmer ${i%2===0?'pop-left':'pop-right'}`}
                   style={{
                     animationDelay:`${i*.11}s`,
-                    cursor: isKSS ? 'none' : 'default',
+                    cursor: hasDetailPage ? 'pointer' : 'default',
                     transition: 'all .28s ease',
                   }}
-                  onClick={isKSS ? () => onEventClick?.(ev) : undefined}
-                  onMouseEnter={isKSS ? e => {
+                  onClick={hasDetailPage ? () => onEventClick?.(ev) : undefined}
+                  onMouseEnter={hasDetailPage ? e => {
                     e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
                     e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
                     e.currentTarget.style.transform = 'translateY(-4px)';
                   } : undefined}
-                  onMouseLeave={isKSS ? e => {
+                  onMouseLeave={hasDetailPage ? e => {
                     e.currentTarget.style.borderColor = '';
                     e.currentTarget.style.boxShadow = '';
                     e.currentTarget.style.transform = '';
@@ -79,8 +79,8 @@ export default function EventsSection({ onEventClick, events = [] }) {
                 >
                   <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'7px'}}>
                     <span style={{display:'flex',color:'var(--c1)'}}><DynamicIcon name={ev.icon || 'Calendar'} size={30} /></span>
-                    <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>
-                    {isKSS && (
+                    <div className="timeline-event-name" style={hasDetailPage ? { color: '#a855f7' } : {}}>{ev.name}</div>
+                    {hasDetailPage && (
                       <span style={{
                         marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
                         borderRadius: '10px', background: 'rgba(168,85,247,.12)',

@@ -18,7 +18,7 @@ describe('EventsPage Component', () => {
       id: 'kss-154',
       name: 'KSS #154 — Web Dev',
       shortName: 'KSS #154',
-      date: 'May 1, 2025',
+      date: 'May 1, 2099',
       description: 'Modern web development',
       status: 'upcoming',
       icon: '🌐',
