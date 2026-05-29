@@ -51,7 +51,7 @@ export default function GamificationDashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '48px' }}>🏆</div>
+              <div style={{ display: 'flex', color: '#F59E0B' }}><DynamicIcon name="Trophy" size={48} /></div>
               <div>
                 <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#FFFFFF' }}>Level {userStats.level} {userStats.title}</h2>
                 <p style={{ color: '#9CA3AF' }}>{userStats.xp} / {userStats.nextLevelXP} XP</p>
@@ -76,7 +76,7 @@ export default function GamificationDashboard() {
         </div>
         <div style={{ background: '#1A1A1A', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
           <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#FFFFFF' }}>{userStats.stats.current_streak}</p>
-          <p style={{ color: '#9CA3AF', fontSize: '13px' }}>Day Streak 🔥</p>
+          <p style={{ color: '#9CA3AF', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>Day Streak <DynamicIcon name="Flame" size={14} /></p>
         </div>
         <div style={{ background: '#1A1A1A', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
           <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#FFFFFF' }}>{userStats.stats.comments}</p>
@@ -172,23 +172,23 @@ export default function GamificationDashboard() {
           <h3 style={{ color: '#FFFFFF', marginBottom: '16px' }}>Earn XP by taking actions</h3>
           <div style={{ display: 'grid', gap: '12px' }}>
             <button onClick={() => handleAction('EVENT_ATTENDANCE')} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ color: '#FFFFFF' }}>🎉 Attend an Event</span>
+              <span style={{ color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 8 }}><DynamicIcon name="Calendar" size={18} /> Attend an Event</span>
               <span style={{ color: '#10B981', fontWeight: 'bold' }}>+50 XP</span>
             </button>
             <button onClick={() => handleAction('COMMENT_POSTED')} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ color: '#FFFFFF' }}>💬 Post a Comment</span>
+              <span style={{ color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 8 }}><DynamicIcon name="MessageCircle" size={18} /> Post a Comment</span>
               <span style={{ color: '#10B981', fontWeight: 'bold' }}>+5 XP</span>
             </button>
             <button onClick={() => handleAction('CONTENT_CREATION')} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ color: '#FFFFFF' }}>📝 Create Content</span>
+              <span style={{ color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 8 }}><DynamicIcon name="FileText" size={18} /> Create Content</span>
               <span style={{ color: '#10B981', fontWeight: 'bold' }}>+30 XP</span>
             </button>
             <button onClick={() => handleAction('REFERRAL')} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ color: '#FFFFFF' }}>🤝 Refer a Friend</span>
+              <span style={{ color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 8 }}><DynamicIcon name="Users" size={18} /> Refer a Friend</span>
               <span style={{ color: '#10B981', fontWeight: 'bold' }}>+100 XP</span>
             </button>
             <button onClick={() => handleAction('FEEDBACK_GIVEN')} style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ color: '#FFFFFF' }}>📋 Give Feedback</span>
+              <span style={{ color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 8 }}><DynamicIcon name="Clipboard" size={18} /> Give Feedback</span>
               <span style={{ color: '#10B981', fontWeight: 'bold' }}>+10 XP</span>
             </button>
           </div>
