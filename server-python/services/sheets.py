@@ -1,8 +1,13 @@
 import os
 from datetime import datetime
 from typing import Any, Dict
-import gspread
-from google.oauth2.service_account import Credentials
+
+try:
+    import gspread
+    from google.oauth2.service_account import Credentials
+except ModuleNotFoundError:
+    gspread = None
+    Credentials = None
 
 class SheetsService:
     def __init__(self) -> None:
@@ -10,7 +15,7 @@ class SheetsService:
         sheet_id = os.getenv("GOOGLE_SHEET_ID")
 
         # Dev mode: skip Google connection if credentials are dummy/missing
-        if not private_key or "dummy" in private_key:
+        if not private_key or "dummy" in private_key or not gspread or not Credentials:
             self.client = None
             self.sheet_id = None
             return

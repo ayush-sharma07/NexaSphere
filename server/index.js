@@ -11,6 +11,7 @@ import { ZodError } from 'zod';
 import { EventEmitter } from 'events';
 import { normalizeFormSubmission } from './validators/formSchemas.js';
 import { adminAuthMiddleware } from './middleware/adminAuthMiddleware.js';
+import { createRateLimiter, parsePositiveInteger } from './middleware/rateLimiter.js';
 import analyticsRouter from './routes/analytics.js';
 
 // Import required controllers and services
@@ -27,6 +28,27 @@ const CONTENT_FILE = path.join(__dirname, 'data', 'content.json');
 
 const app = express();
 const adminEvents = new EventEmitter();
+
+const contentRateLimit = createRateLimiter({
+  windowMs: parsePositiveInteger(process.env.CONTENT_RATE_LIMIT_WINDOW_MS, 5 * 60 * 1000),
+  max: parsePositiveInteger(process.env.CONTENT_RATE_LIMIT_MAX, 120),
+  message: 'Too many content requests. Please slow down and try again later.',
+  keyPrefix: 'content',
+});
+
+const formRateLimit = createRateLimiter({
+  windowMs: parsePositiveInteger(process.env.FORM_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
+  max: parsePositiveInteger(process.env.FORM_RATE_LIMIT_MAX, 30),
+  message: 'Too many submission requests. Please wait before trying again.',
+  keyPrefix: 'forms',
+});
+
+const adminLoginRateLimit = createRateLimiter({
+  windowMs: parsePositiveInteger(process.env.ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
+  max: parsePositiveInteger(process.env.ADMIN_LOGIN_RATE_LIMIT_MAX, 10),
+  message: 'Too many admin login requests. Please wait and try again.',
+  keyPrefix: 'admin-login',
+});
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((value) => value.trim()).filter(Boolean) : true,
@@ -492,13 +514,18 @@ app.get('/healthz', async (req, res) => {
   res.json({ ok: true, events: events.length, storage: HAS_SUPABASE ? 'supabase' : 'file' });
 });
 
+app.use('/api/content', contentRateLimit);
+app.use('/api/forms', formRateLimit);
+app.use('/api/submissions', formRateLimit);
+app.use('/api/core-team/apply', formRateLimit);
+
 app.get('/api/content/events', eventsController.listEvents);
 
 app.get('/api/content/activity-events/:activityKey', activityEventsController.listActivityEvents);
 app.post('/api/content/activity-events/:activityKey', activityEventsController.addActivityEvent);
 app.delete('/api/content/activity-events/:activityKey/:eventId', activityEventsController.deleteActivityEvent);
 
-app.post('/api/admin/login', adminAuthMiddleware.login);
+app.post('/api/admin/login', adminLoginRateLimit, adminAuthMiddleware.login);
 app.post('/api/admin/logout', adminAuthMiddleware.logout);
 app.use('/api/admin/analytics', adminAuth, analyticsRouter);
 
@@ -539,17 +566,19 @@ app.post('/api/submissions/membership', formsController.makeHandleForm('membersh
 app.post('/api/submissions/recruitment', formsController.makeHandleForm('recruitment'));
 
 const port = Number(process.env.PORT || 8787);
-if (!process.env.VERCEL) {
-  const boot = HAS_SUPABASE ? Promise.resolve() : ensureContentFile();
-  boot.then(() => {
+if (process.env.NODE_ENV !== 'test' && !process.env.SKIP_SERVER_LISTEN) {
+  if (!process.env.VERCEL) {
+    const boot = HAS_SUPABASE ? Promise.resolve() : ensureContentFile();
+    boot.then(() => {
+      app.listen(port, () => {
+        console.log(`NexaSphere server listening on http://localhost:${port}`);
+      });
+    });
+  } else {
     app.listen(port, () => {
       console.log(`NexaSphere server listening on http://localhost:${port}`);
     });
-  });
-} else {
-  app.listen(port, () => {
-    console.log(`NexaSphere server listening on http://localhost:${port}`);
-  });
+  }
 }
 
 export default app;

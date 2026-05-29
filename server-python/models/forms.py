@@ -1,12 +1,12 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 import re
 
 ALLOWED_YEARS = {"1st Year", "2nd Year", "3rd Year", "4th Year"}
 
 class FormSubmission(BaseModel):
     name: str = Field(..., min_length=2, max_length=100, strip_whitespace=True)
-    email: EmailStr
+    email: str = Field(..., min_length=5, max_length=254, strip_whitespace=True)
     whatsapp: str = Field(..., min_length=10, max_length=10)
     year: str = Field(..., max_length=20)
     branch: str = Field(..., min_length=2, max_length=100, strip_whitespace=True)
@@ -18,6 +18,13 @@ class FormSubmission(BaseModel):
     def name_must_be_valid(cls, v):
         if not re.match(r"^[a-zA-Z\s'\-]+$", v):
             raise ValueError("Name can only contain letters, spaces, hyphens, and apostrophes")
+        return v
+
+    @field_validator("email")
+    @classmethod
+    def email_must_be_valid(cls, v):
+        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", v):
+            raise ValueError("Email must be a valid email address")
         return v
 
     @field_validator("whatsapp")
