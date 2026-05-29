@@ -23,14 +23,13 @@ import CinematicOpening from './shared/CinematicOpening';
 import Chatbot from './shared/Chatbot';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import GamificationDashboard from './components/gamification/GamificationDashboard';
+import RecommendationWidget from './components/recommendation/RecommendationWidget';
 
 import {
   AmbientOrbs, SectionDivider,
   useNsReveal, useHeroParallax,
   useNavScrollTint, useGlobalMouseParallax, useMagneticCards,
 } from './shared/MotionLayer';
-// Admin has moved to the standalone dashboard (admin-dashboard/)
-// The standalone admin app runs separately (dev: http://localhost:5174)
 
 import ActivitiesPage from './pages/activities/ActivitiesPage';
 import EventsPage from './pages/events/EventsPage';
@@ -198,6 +197,12 @@ function MainContent({ actions, theme, handleTabChange, eventsData }) {
   return (
     <>
       <HeroSection onTabChange={handleTabChange} onApply={actions.openApply} onJoin={actions.openJoin} theme={theme} />
+      
+      {/* AI Recommendation Widget */}
+      <div className="container">
+        <RecommendationWidget events={eventsData} onEventClick={actions.onKSSClick} />
+      </div>
+      
       <SectionDivider />
       <ActivitiesSection onNavigate={actions.onNavigate} />
       <SectionDivider />
