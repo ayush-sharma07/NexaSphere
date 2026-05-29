@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Calendar, MapPin, Check } from 'lucide-react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -367,8 +368,9 @@ END:VCALENDAR`;
                   ))}
                 </div>
               </div>
-              <button 
-                onClick={() => setShowModal(false)} 
+              <button
+                onClick={() => setShowModal(false)}
+                aria-label="Close"
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -408,8 +410,8 @@ END:VCALENDAR`;
                 borderBottom: '1px solid var(--bdr)',
                 flexWrap: 'wrap'
               }}>
-                <span style={{ color: 'var(--t2)', fontSize: '0.9rem' }}>
-                  📅 {selectedEvent.start?.toLocaleDateString('en-US', { 
+                <span style={{ color: 'var(--t2)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Calendar size={16} aria-hidden="true" /> {selectedEvent.start?.toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     year: 'numeric', 
                     month: 'long', 
@@ -430,7 +432,7 @@ END:VCALENDAR`;
                   color: 'var(--t2)',
                   fontSize: '0.9rem'
                 }}>
-                  <span>📍</span>
+                  <MapPin size={16} aria-hidden="true" />
                   <span>{selectedEvent.extendedProps.location}</span>
                 </div>
               )}
@@ -472,7 +474,7 @@ END:VCALENDAR`;
                   transition: 'all 0.2s ease'
                 }}
               >
-                {rsvpStatus[selectedEvent.id] ? '✓ RSVP Confirmed' : 'RSVP Now'}
+                {rsvpStatus[selectedEvent.id] ? <><Check size={14} aria-hidden="true" style={{display:'inline',verticalAlign:'-2px',marginRight:4}} /> RSVP Confirmed</> : 'RSVP Now'}
               </button>
               <button 
                 onClick={() => addToGoogleCalendar(selectedEvent)}
