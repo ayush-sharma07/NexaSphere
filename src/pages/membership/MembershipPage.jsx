@@ -363,14 +363,14 @@ export default function MembershipPage({ onBack }) {
             gap: 10,
           }}>
             {[
-              { icon: '🔐', label: 'Cybersecurity' },
-              { icon: '🤖', label: 'AI / Machine Learning' },
-              { icon: '🌐', label: 'Web Development' },
-              { icon: '☁️', label: 'Cloud & AWS' },
-              { icon: '📱', label: 'Android Development' },
-              { icon: '📢', label: 'Management & Events' },
-              { icon: '💼', label: 'Career & Placement' },
-              { icon: '🎨', label: 'Design & Media' },
+              { icon: 'ShieldCheck', label: 'Cybersecurity' },
+              { icon: 'Brain', label: 'AI / Machine Learning' },
+              { icon: 'Globe', label: 'Web Development' },
+              { icon: 'Cloud', label: 'Cloud & AWS' },
+              { icon: 'Smartphone', label: 'Android Development' },
+              { icon: 'Megaphone', label: 'Management & Events' },
+              { icon: 'Briefcase', label: 'Career & Placement' },
+              { icon: 'Palette', label: 'Design & Media' },
             ].map(d => (
               <div key={d.label} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
@@ -417,7 +417,7 @@ export default function MembershipPage({ onBack }) {
             padding: '12px 16px',
             display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           }}>
-            <span style={{ fontSize: '1.1rem' }}>🔗</span>
+            <span style={{ display: 'flex', color: 'var(--c2)' }}><DynamicIcon name="Link" size={20} /></span>
             <span style={{ fontSize: '.88rem', color: 'var(--t2)', flex: 1 }}>
               Before filling the form, please follow our official LinkedIn page:
             </span>
@@ -743,7 +743,7 @@ export default function MembershipPage({ onBack }) {
                   padding:22, position:'relative', overflow:'hidden', textAlign:'center',
                 }}>
                   <div className="corner-tl"/><div className="corner-br"/>
-                  <div style={{ fontSize:'2.4rem', marginBottom:14 }}>🚀</div>
+                  <div style={{ display:'flex', justifyContent:'center', marginBottom:14, color:'var(--c1)' }}><DynamicIcon name="Rocket" size={38} /></div>
                   <div style={{ fontFamily:'Orbitron,monospace', fontSize:'1rem', color:'var(--t1)', fontWeight:700, marginBottom:12 }}>
                     Membership Form Submitted Successfully!
                   </div>
@@ -819,7 +819,7 @@ export default function MembershipPage({ onBack }) {
                   borderRadius:'var(--r2)', padding:'14px 16px',
                   fontSize:'.88rem', color:'var(--t3)', lineHeight:1.7, textAlign:'center',
                 }}>
-                  📌 Questions? Reach us at{' '}
+                  <DynamicIcon name="Pin" size={13} style={{display:'inline',verticalAlign:'-2px',marginRight:4}} /> Questions? Reach us at{' '}
                   <a href="mailto:nexasphere@glbajajgroup.org" style={{ color:'var(--c1)', textDecoration:'none' }}>
                     nexasphere@glbajajgroup.org
                   </a>
