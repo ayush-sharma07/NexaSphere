@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { google } from 'googleapis';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -29,6 +30,58 @@ const CONTENT_FILE = path.join(__dirname, 'data', 'content.json');
 const app = express();
 const adminEvents = new EventEmitter();
 
+const DEFAULT_CORS_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://nexasphere-glbajaj.vercel.app',
+  'https://admin-nexasphere.vercel.app',
+  'https://nexa-sphere-sigma.vercel.app',
+  'https://admin-dashboard-navy-pi-22.vercel.app',
+];
+
+function parseAllowedOrigins(rawValue) {
+  const source = rawValue && rawValue.trim() ? rawValue : DEFAULT_CORS_ORIGINS.join(',');
+  const origins = source
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => value && value !== '*');
+
+  return origins.length > 0 ? [...new Set(origins)] : DEFAULT_CORS_ORIGINS;
+}
+
+const allowedOrigins = parseAllowedOrigins(process.env.CORS_ORIGIN);
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      'default-src': ["'self'"],
+      'base-uri': ["'self'"],
+      'object-src': ["'none'"],
+      'frame-ancestors': ["'none'"],
+      'img-src': ["'self'", 'data:'],
+      'font-src': ["'self'", 'data:'],
+      'style-src': ["'self'", "'unsafe-inline'"],
+      'script-src': ["'self'", "'unsafe-inline'"],
+      'connect-src': ["'self'"],
+      'form-action': ["'self'"],
+    },
+  },
+  hsts: process.env.NODE_ENV === 'production'
+    ? {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      }
+    : false,
+  referrerPolicy: {
+    policy: 'no-referrer',
+  },
+  frameguard: {
+    action: 'deny',
+  },
+}));
+
 const contentRateLimit = createRateLimiter({
   windowMs: parsePositiveInteger(process.env.CONTENT_RATE_LIMIT_WINDOW_MS, 5 * 60 * 1000),
   max: parsePositiveInteger(process.env.CONTENT_RATE_LIMIT_MAX, 120),
@@ -51,7 +104,14 @@ const adminLoginRateLimit = createRateLimiter({
 });
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((value) => value.trim()).filter(Boolean) : true,
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`CORS policy does not allow this origin: ${origin}`));
+  },
   credentials: false,
 }));
 app.use(express.json({ limit: '512kb' }));
