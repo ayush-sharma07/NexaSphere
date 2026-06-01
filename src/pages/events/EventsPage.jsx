@@ -6,15 +6,25 @@ import { DynamicIcon } from '../../shared/Icons';
 import PersonalizedFeed from '../../components/recommendation/PersonalizedFeed';
 import EventCalendarView from '../../components/calendar/EventCalendarView';
 import SchedulingAssistant from '../../components/scheduling/SchedulingAssistant';
+import SkeletonCard from '../../components/SkeletonCard';
 
 export default function EventsPage({ onBack, onEventClick, events = fallbackEvents }) {
   const [view, setView] = useState('timeline');
   const [recommendationView, setRecommendationView] = useState(false);
   const [scheduleView, setScheduleView] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const sortedEvents = [...events].sort((a, b) => {
     return new Date(a.date) - new Date(b.date);
   });
+
+  useEffect(() => {
+    // Smooth loader state transition
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 750);
+    return () => clearTimeout(timer);
+  }, [events]);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -173,46 +183,55 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
           <PersonalizedFeed events={sortedEvents} onEventClick={onEventClick} />
         ) : view === 'timeline' ? (
           <div className="events-timeline ns-reveal">
-            {sortedEvents.map((ev, i) => {
-              const hasDetailPage = !!ev.hasDetailPage;
-              return (
-                <div className="timeline-item" key={ev.id}>
-                  <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
-                  <div
-                    className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
-                    style={{
-                      animationDelay: `${i * .11}s`,
-                      cursor: hasDetailPage ? 'pointer' : 'default',
-                      transition: 'all .28s ease',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
-                      <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
-                      <div className="timeline-event-name">{ev.name}</div>
-                    </div>
-                    <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <DynamicIcon name="Calendar" size={14} /> {ev.date}
-                    </div>
-                    <p className="timeline-event-desc">{ev.description}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                      <span className={`timeline-badge ${ev.status}`}>
-                        {ev.status === 'completed' ? (
-                          <><DynamicIcon name="CheckCircle" size={14} style={{ marginRight: '4px' }} /> Completed</>
-                        ) : (
-                          <><DynamicIcon name="Calendar" size={14} style={{ marginRight: '4px' }} /> Upcoming</>
-                        )}
-                      </span>
-                      {ev.tags?.map(t => (
-                        <span key={t} style={{
-                          fontSize: '.68rem', padding: '2px 8px', borderRadius: '10px',
-                          background: 'var(--c2a)', color: 'var(--c2)', border: '1px solid var(--c2b)', fontWeight: 600,
-                        }}>{t}</span>
-                      ))}
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div className="timeline-item" key={i}>
+                  <div className="timeline-dot upcoming" style={{ background: 'var(--c1)', opacity: 0.5 }} />
+                  <SkeletonCard type="event" style={{ opacity: 1, transform: 'none' }} />
+                </div>
+              ))
+            ) : (
+              sortedEvents.map((ev, i) => {
+                const hasDetailPage = !!ev.hasDetailPage;
+                return (
+                  <div className="timeline-item" key={ev.id}>
+                    <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
+                    <div
+                      className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
+                      style={{
+                        animationDelay: `${i * .11}s`,
+                        cursor: hasDetailPage ? 'pointer' : 'default',
+                        transition: 'all .28s ease',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
+                        <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
+                        <div className="timeline-event-name">{ev.name}</div>
+                      </div>
+                      <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <DynamicIcon name="Calendar" size={14} /> {ev.date}
+                      </div>
+                      <p className="timeline-event-desc">{ev.description}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
+                        <span className={`timeline-badge ${ev.status}`}>
+                          {ev.status === 'completed' ? (
+                            <><DynamicIcon name="CheckCircle" size={14} style={{ marginRight: '4px' }} /> Completed</>
+                          ) : (
+                            <><DynamicIcon name="Calendar" size={14} style={{ marginRight: '4px' }} /> Upcoming</>
+                          )}
+                        </span>
+                        {ev.tags?.map(t => (
+                          <span key={t} style={{
+                            fontSize: '.68rem', padding: '2px 8px', borderRadius: '10px',
+                            background: 'var(--c2a)', color: 'var(--c2)', border: '1px solid var(--c2b)', fontWeight: 600,
+                          }}>{t}</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         ) : (
           <EventCalendarView events={events} onEventClick={onEventClick} />

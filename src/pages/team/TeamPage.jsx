@@ -5,6 +5,7 @@ import TeamMemberModal from './TeamMemberModal';
 import { IconArrowRight, IconSpark } from '../../shared/Icons';
 import { BannerOrbs } from '../../shared/MotionLayer';
 import Footer from '../../shared/Footer';
+import SkeletonCard from '../../components/SkeletonCard';
 
 function MemberCard({ member, idx, onClick }) {
   const ref = useRef(null);
@@ -73,6 +74,7 @@ function MemberCard({ member, idx, onClick }) {
 export default function TeamPage({ onBack, onApply }) {
   const [sel, setSel] = useState(null);
   const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -93,6 +95,7 @@ export default function TeamPage({ onBack, onApply }) {
     const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
     const url = base ? `${base}/api/content/team` : '/api/content/team';
     
+    setLoading(true);
     fetch(url)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
@@ -101,7 +104,10 @@ export default function TeamPage({ onBack, onApply }) {
           setMembers(data.members);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
     return () => { alive = false; };
   }, []);
 
@@ -153,7 +159,13 @@ export default function TeamPage({ onBack, onApply }) {
             <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, var(--bdr2), transparent)' }} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
-            {organiser.map((m, i) => <MemberCard key={m.id} member={m} idx={i} onClick={setSel} />)}
+            {loading ? (
+              Array.from({ length: 2 }).map((_, i) => (
+                <SkeletonCard key={i} type="team" />
+              ))
+            ) : (
+              organiser.map((m, i) => <MemberCard key={m.id} member={m} idx={i} onClick={setSel} />)
+            )}
           </div>
         </div>
 
@@ -170,7 +182,13 @@ export default function TeamPage({ onBack, onApply }) {
             <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, var(--bdr2), transparent)' }} />
           </div>
           <div className="team-grid">
-            {coreTeam.map((m, i) => <MemberCard key={m.id} member={m} idx={i + 2} onClick={setSel} />)}
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonCard key={i} type="team" />
+              ))
+            ) : (
+              coreTeam.map((m, i) => <MemberCard key={m.id} member={m} idx={i + 2} onClick={setSel} />)
+            )}
           </div>
         </div>
 

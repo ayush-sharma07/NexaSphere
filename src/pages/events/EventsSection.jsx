@@ -1,7 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { DynamicIcon } from '../../shared/Icons';
+import SkeletonCard from '../../components/SkeletonCard';
 
 export default function EventsSection({ onEventClick, events = [] }) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Elegant loading state helper to show the skeletons and avoid visual flashing
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 750);
+    return () => clearTimeout(timer);
+  }, [events]);
+
   useEffect(()=>{
     const obs=new IntersectionObserver(entries=>{
       entries.forEach(e=>{
@@ -53,11 +64,19 @@ export default function EventsSection({ onEventClick, events = [] }) {
           <p className="section-subtitle pop-in" style={{animationDelay:'.1s'}}>Where Ideas Come to Life</p>
         </div>
         <div className="events-timeline">
-          {sortedEvents.map((ev,i)=>{
-            const hasDetailPage = !!ev.hasDetailPage;
-            return (
-              <div className="timeline-item" key={ev.id}>
-                <div className={`timeline-dot${ev._effectiveStatus === 'upcoming' ? ' upcoming' : ''}`}/>
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div className="timeline-item" key={i}>
+                <div className="timeline-dot upcoming" style={{ background: 'var(--c1)', opacity: 0.5 }} />
+                <SkeletonCard type="event" style={{ opacity: 1, transform: 'none' }} />
+              </div>
+            ))
+          ) : (
+            sortedEvents.map((ev,i)=>{
+              const hasDetailPage = !!ev.hasDetailPage;
+              return (
+                <div className="timeline-item" key={ev.id}>
+                  <div className={`timeline-dot${ev._effectiveStatus === 'upcoming' ? ' upcoming' : ''}`}/>
                 <div
                   className={`timeline-card shimmer ${i%2===0?'pop-left':'pop-right'}`}
                   style={{
@@ -108,8 +127,8 @@ export default function EventsSection({ onEventClick, events = [] }) {
                 </div>
               </div>
             );
-          })}
-          {events.length>0&&(
+          }))}
+          {!loading && events.length>0&&(
             <div className="timeline-item">
               <div className="timeline-dot upcoming"/>
               <div className="timeline-card pop-in" style={{textAlign:'center',color:'var(--t3)'}}>
