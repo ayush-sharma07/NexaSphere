@@ -198,24 +198,6 @@ export default function DashboardPage({ onBack }) {
         ) : null}
 
         {/* Stats Grid */}
-        <div className="dashboard-stats-grid">
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Total Points</p>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.totalPoints}</p>
-          </div>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Events Attended</p>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.eventsAttended}</p>
-          </div>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Current Streak</p>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.currentStreak} days</p>
-            <p style={{ color: '#6B7280', fontSize: '11px', marginTop: '4px' }}>Best: {metrics.longestStreak} days</p>
-          </div>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Contributions</p>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.contributions}</p>
-          </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '48px' }}>
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
