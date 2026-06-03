@@ -2,8 +2,8 @@ import { coreTeamService } from '../services/coreTeamService.js';
 import { wrapAsync } from '../middleware/asyncHandler.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 
-
 function toSafeString(value, max = 4000) {
+
   return String(value ?? '').trim().slice(0, max);
 }
 
