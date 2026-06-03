@@ -265,7 +265,7 @@ export default function DashboardPage({ onBack }) {
         </div>
 
         {/* Two Column Layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '48px' }}>
+        <div className="dashboard-two-col">
           
           {/* Activity Timeline */}
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', overflow: 'hidden' }}>
