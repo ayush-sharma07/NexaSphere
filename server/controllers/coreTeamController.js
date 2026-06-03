@@ -1,6 +1,7 @@
 import { coreTeamService } from '../services/coreTeamService.js';
 import { wrapAsync } from '../middleware/asyncHandler.js';
-import { NotFoundError } from '../utils/errors.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
+
 
 function toSafeString(value, max = 4000) {
   return String(value ?? '').trim().slice(0, max);
@@ -8,15 +9,26 @@ function toSafeString(value, max = 4000) {
 
 function validateWhatsApp(str) {
   const v = String(str || '').trim();
-  if (!/^\d{10}$/.test(v)) throw new Error('WhatsApp must be exactly 10 digits');
+  if (!/^\d{10}$/.test(v)) {
+    throw new ValidationError('WhatsApp must be exactly 10 digits', {
+      field: 'whatsapp',
+      value: str,
+    });
+  }
   return v;
 }
 
 function validateSection(str) {
   const v = String(str || '').trim().toUpperCase();
-  if (!/^[A-Z]$/.test(v)) throw new Error('Section must be a single letter (A-Z)');
+  if (!/^[A-Z]$/.test(v)) {
+    throw new ValidationError('Section must be a single letter (A-Z)', {
+      field: 'section',
+      value: str,
+    });
+  }
   return v;
 }
+
 
 function isEmail(s) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || '').trim());
