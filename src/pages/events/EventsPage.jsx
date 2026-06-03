@@ -6,33 +6,25 @@ import { DynamicIcon } from '../../shared/Icons';
 import PersonalizedFeed from '../../components/recommendation/PersonalizedFeed';
 import EventCalendarView from '../../components/calendar/EventCalendarView';
 import SchedulingAssistant from '../../components/scheduling/SchedulingAssistant';
-import SkeletonCard from '../../components/SkeletonCard';
+import useIntersectionObserver from '../../hooks/useIntersectionObserver';
 
 export default function EventsPage({ onBack, onEventClick, events = fallbackEvents }) {
   const [view, setView] = useState('timeline');
   const [recommendationView, setRecommendationView] = useState(false);
   const [scheduleView, setScheduleView] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   const sortedEvents = [...events].sort((a, b) => {
     return new Date(a.date) - new Date(b.date);
   });
 
-  useEffect(() => {
-    // Smooth loader state transition
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 750);
-    return () => clearTimeout(timer);
-  }, [events]);
+  useIntersectionObserver(
+    '#events-page .pop-in, #events-page .pop-left, #events-page .pop-right, #events-page .pop-word',
+    'fired',
+    { threshold: 0, rootMargin: '0px 0px -10px 0px' }
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('fired'); obs.unobserve(e.target); } });
-    }, { threshold: 0, rootMargin: '0px 0px -10px 0px' });
-    document.querySelectorAll('#events-page .pop-in, #events-page .pop-left, #events-page .pop-right, #events-page .pop-word').forEach(el => obs.observe(el));
-    return () => obs.disconnect();
   }, []);
 
   return (
@@ -96,7 +88,7 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
             }}
           >
             <DynamicIcon name="List" size={16} />
-            Timeline
+            Timeline View
           </button>
           <button
             onClick={() => {
@@ -121,7 +113,7 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
             }}
           >
             <DynamicIcon name="Calendar" size={16} />
-            Calendar
+            Calendar View
           </button>
           <button
             onClick={() => {
@@ -183,55 +175,74 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
           <PersonalizedFeed events={sortedEvents} onEventClick={onEventClick} />
         ) : view === 'timeline' ? (
           <div className="events-timeline ns-reveal">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div className="timeline-item" key={i}>
-                  <div className="timeline-dot upcoming" style={{ background: 'var(--c1)', opacity: 0.5 }} />
-                  <SkeletonCard type="event" style={{ opacity: 1, transform: 'none' }} />
-                </div>
-              ))
-            ) : (
-              sortedEvents.map((ev, i) => {
-                const hasDetailPage = !!ev.hasDetailPage;
-                return (
-                  <div className="timeline-item" key={ev.id}>
-                    <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
-                    <div
-                      className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
-                      style={{
-                        animationDelay: `${i * .11}s`,
-                        cursor: hasDetailPage ? 'pointer' : 'default',
-                        transition: 'all .28s ease',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
-                        <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
-                        <div className="timeline-event-name">{ev.name}</div>
-                      </div>
-                      <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <DynamicIcon name="Calendar" size={14} /> {ev.date}
-                      </div>
-                      <p className="timeline-event-desc">{ev.description}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                        <span className={`timeline-badge ${ev.status}`}>
-                          {ev.status === 'completed' ? (
-                            <><DynamicIcon name="CheckCircle" size={14} style={{ marginRight: '4px' }} /> Completed</>
-                          ) : (
-                            <><DynamicIcon name="Calendar" size={14} style={{ marginRight: '4px' }} /> Upcoming</>
-                          )}
-                        </span>
-                        {ev.tags?.map(t => (
-                          <span key={t} style={{
-                            fontSize: '.68rem', padding: '2px 8px', borderRadius: '10px',
-                            background: 'var(--c2a)', color: 'var(--c2)', border: '1px solid var(--c2b)', fontWeight: 600,
-                          }}>{t}</span>
-                        ))}
-                      </div>
+            {sortedEvents.map((ev, i) => {
+              const hasDetailPage = !!ev.hasDetailPage;
+              return (
+                <div className="timeline-item" key={ev.id}>
+                  <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
+                  <div
+                    className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'}`}
+                    style={{
+                      animationDelay: `${i * .11}s`,
+                      cursor: hasDetailPage ? 'pointer' : 'default',
+                      transition: 'all .28s ease',
+                    }}
+                    onClick={hasDetailPage ? () => onEventClick?.(ev) : undefined}
+                    onMouseEnter={hasDetailPage ? e => {
+                      e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                    } : undefined}
+                    onMouseLeave={hasDetailPage ? e => {
+                      e.currentTarget.style.borderColor = '';
+                      e.currentTarget.style.boxShadow = '';
+                      e.currentTarget.style.transform = '';
+                    } : undefined}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
+                      <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
+                      <div className="timeline-event-name" style={hasDetailPage ? { color: '#a855f7' } : {}}>{ev.name}</div>
+                      {hasDetailPage && (
+                        <span style={{
+                          marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
+                          borderRadius: '10px', background: 'rgba(168,85,247,.12)',
+                          color: '#a855f7', border: '1px solid rgba(168,85,247,.3)',
+                          fontFamily: "'Space Mono', monospace", whiteSpace: 'nowrap',
+                          cursor: 'pointer'
+                        }}>View Details →</span>
+                      )}
+                    </div>
+                    <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <DynamicIcon name="Calendar" size={14} /> {ev.dateText ?? ev.date}
+                    </div>
+                    <p className="timeline-event-desc">{ev.description}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
+                      <span className={`timeline-badge ${ev.status}`}>
+                        {ev.status === 'completed' ? (
+                          <><DynamicIcon name="CheckCircle" size={14} style={{ marginRight: '4px' }} /> Completed</>
+                        ) : (
+                          <><DynamicIcon name="Calendar" size={14} style={{ marginRight: '4px' }} /> Upcoming</>
+                        )}
+                      </span>
+                      {ev.tags?.map(t => (
+                        <span key={t} style={{
+                          fontSize: '.68rem', padding: '2px 8px', borderRadius: '10px',
+                          background: 'var(--c2a)', color: 'var(--c2)', border: '1px solid var(--c2b)', fontWeight: 600,
+                        }}>{t}</span>
+                      ))}
                     </div>
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
+
+            <div className="timeline-item">
+              <div className="timeline-dot upcoming" />
+              <div className="timeline-card pop-in" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${sortedEvents.length * .11}s` }}>
+                <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
+                <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
+              </div>
+            </div>
           </div>
         ) : (
           <EventCalendarView events={events} onEventClick={onEventClick} />
