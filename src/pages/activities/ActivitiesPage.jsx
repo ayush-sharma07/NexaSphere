@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { activities } from "../../data/activitiesData";
 import { BannerOrbs } from "../../shared/MotionLayer";
 import Footer from '../../shared/Footer';
 import { DynamicIcon } from '../../shared/Icons';
+import SkeletonCard from "../../components/SkeletonCard";
 
 const activityDetails = {
   Hackathon: {
@@ -334,6 +335,13 @@ function ActivityCard({ a, idx, onNavigate }) {
 }
 
 export default function ActivitiesPage({ onNavigate, onBack }) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 750);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     window.scrollTo({ top: 0 });
     const obs = new IntersectionObserver(
@@ -445,9 +453,15 @@ export default function ActivitiesPage({ onNavigate, onBack }) {
             gap: "24px",
           }}
         >
-          {activities.map((a, i) => (
-            <ActivityCard key={a.id} a={a} idx={i} onNavigate={onNavigate} />
-          ))}
+          {loading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} type="activity" />
+            ))
+          ) : (
+            activities.map((a, i) => (
+              <ActivityCard key={a.id} a={a} idx={i} onNavigate={onNavigate} />
+            ))
+          )}
         </div>
       </div>
 

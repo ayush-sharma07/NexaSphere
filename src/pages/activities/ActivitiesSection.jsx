@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { activities } from '../../data/activitiesData';
 import { activityPages } from '../../data/activities/index';
 import { DynamicIcon } from '../../shared/Icons';
+import SkeletonCard from '../../components/SkeletonCard';
 
 /* Anti-gravity delays — same pattern as team cards */
 const AG_DELAYS = [0, -2.1, -4.2, -1.0, -3.3, -5.5, -0.7, -6.1];
@@ -110,6 +111,13 @@ function ActivityCard({ a, idx, onNav }) {
 
 export default function ActivitiesSection({ onNavigate }) {
   const { t } = useTranslation();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 750);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
@@ -138,9 +146,15 @@ export default function ActivitiesSection({ onNavigate }) {
           </p>
         </div>
         <div className="activity-grid cin-container">
-          {activities.map((a, i) => (
-            <ActivityCard key={a.id} a={a} idx={i} onNav={onNavigate}/>
-          ))}
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} type="activity" />
+            ))
+          ) : (
+            activities.map((a, i) => (
+              <ActivityCard key={a.id} a={a} idx={i} onNav={onNavigate}/>
+            ))
+          )}
         </div>
       </div>
     </section>

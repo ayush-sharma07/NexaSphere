@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import TeamMemberModal from './TeamMemberModal';
 import { IconArrowRight, IconSpark } from '../../shared/Icons';
+import SkeletonCard from '../../components/SkeletonCard';
 
 function MemberCard({ member, idx, onClick }) {
   const ref = useRef(null);
@@ -67,12 +68,14 @@ function MemberCard({ member, idx, onClick }) {
 export default function TeamSection({ onApply }) {
   const [sel, setSel] = useState(null);
   const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
     const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
     const url = base ? `${base}/api/content/team` : '/api/content/team';
     
+    setLoading(true);
     fetch(url)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
@@ -81,9 +84,13 @@ export default function TeamSection({ onApply }) {
           setMembers(data.members);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
     return () => { alive = false; };
   }, []);
+
 
   useEffect(() => {
     const elements = document.querySelectorAll('#section-team .pop-flip, #section-team .pop-in, #section-team .pop-word');
@@ -125,7 +132,13 @@ export default function TeamSection({ onApply }) {
         </div>
 
         <div className="team-grid cin-container">
-          {members.map((m, i) => <MemberCard key={m.id} member={m} idx={i} onClick={setSel} />)}
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i} type="team" />
+            ))
+          ) : (
+            members.map((m, i) => <MemberCard key={m.id} member={m} idx={i} onClick={setSel} />)
+          )}
         </div>
 
 

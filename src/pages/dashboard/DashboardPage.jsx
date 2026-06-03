@@ -3,6 +3,7 @@ import Footer from '../../shared/Footer';
 import { BannerOrbs } from '../../shared/MotionLayer';
 import { DynamicIcon } from '../../shared/Icons';
 import { gamificationService } from '../../services/gamification/gamificationService';
+import SkeletonCard from '../../components/SkeletonCard';
 
 export default function DashboardPage({ onBack }) {
   const [metrics, setMetrics] = useState({
@@ -58,7 +59,10 @@ export default function DashboardPage({ onBack }) {
     } catch (err) {
       setError('Failed to load dashboard data');
     } finally {
-      setLoading(false);
+      // Simulate network latency so skeletons animate beautifully
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     }
   };
 
@@ -68,17 +72,6 @@ export default function DashboardPage({ onBack }) {
   };
 
   const maxCount = Math.max(...weeklyData.map(d => d.count), 1);
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0A0A0A' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '40px', height: '40px', border: '2px solid #CC1111', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div>
-          <p style={{ color: '#9CA3AF' }}>Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div id="dashboard-page" style={{ minHeight: '100vh', paddingBottom: '100px', background: '#0A0A0A' }}>
@@ -116,7 +109,44 @@ export default function DashboardPage({ onBack }) {
         )}
 
         {/* Gamification Stats Card */}
-        {gamificationStats && (
+        {loading ? (
+          <div style={{ 
+            background: 'linear-gradient(135deg, #1A1A1A, #0F0F0F)', 
+            borderRadius: '16px', 
+            padding: '24px', 
+            marginBottom: '32px',
+            border: '1px solid #2A2A2A',
+            pointerEvents: 'none'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <div className="ns-skeleton" style={{ width: '100px', height: '18px', borderRadius: '4px', marginBottom: '14px' }} />
+                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginTop: '8px' }}>
+                  <div>
+                    <div className="ns-skeleton" style={{ width: '50px', height: '11px', borderRadius: '4px', marginBottom: '6px' }} />
+                    <div className="ns-skeleton" style={{ width: '90px', height: '24px', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <div className="ns-skeleton" style={{ width: '50px', height: '11px', borderRadius: '4px', marginBottom: '6px' }} />
+                    <div className="ns-skeleton" style={{ width: '60px', height: '24px', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <div className="ns-skeleton" style={{ width: '70px', height: '11px', borderRadius: '4px', marginBottom: '6px' }} />
+                    <div className="ns-skeleton" style={{ width: '40px', height: '24px', borderRadius: '4px' }} />
+                  </div>
+                </div>
+              </div>
+              <div className="ns-skeleton" style={{ width: '130px', height: '36px', borderRadius: '8px' }} />
+            </div>
+            <div style={{ marginTop: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <div className="ns-skeleton" style={{ width: '120px', height: '11px', borderRadius: '4px' }} />
+                <div className="ns-skeleton" style={{ width: '70px', height: '11px', borderRadius: '4px' }} />
+              </div>
+              <div className="ns-skeleton" style={{ width: '100%', height: '6px', borderRadius: '3px' }} />
+            </div>
+          </div>
+        ) : gamificationStats ? (
           <div style={{ 
             background: 'linear-gradient(135deg, #1A1A1A, #0F0F0F)', 
             borderRadius: '16px', 
@@ -165,33 +195,51 @@ export default function DashboardPage({ onBack }) {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '48px' }}>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Total Points</p>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.totalPoints}</p>
-          </div>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Events Attended</p>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.eventsAttended}</p>
-          </div>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Current Streak</p>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.currentStreak} days</p>
-            <p style={{ color: '#6B7280', fontSize: '11px', marginTop: '4px' }}>Best: {metrics.longestStreak} days</p>
-          </div>
-          <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
-            <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Contributions</p>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.contributions}</p>
-          </div>
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i} type="stat" />
+            ))
+          ) : (
+            <>
+              <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
+                <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Total Points</p>
+                <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.totalPoints}</p>
+              </div>
+              <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
+                <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Events Attended</p>
+                <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.eventsAttended}</p>
+              </div>
+              <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
+                <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Current Streak</p>
+                <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.currentStreak} days</p>
+                <p style={{ color: '#6B7280', fontSize: '11px', marginTop: '4px' }}>Best: {metrics.longestStreak} days</p>
+              </div>
+              <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
+                <p style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '8px' }}>Contributions</p>
+                <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#FFFFFF' }}>{metrics.contributions}</p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Weekly Activity Chart */}
         <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '32px', marginBottom: '48px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#FFFFFF', marginBottom: '24px' }}>Weekly Activity</h2>
-          {weeklyData.every(d => d.count === 0) ? (
+          {loading ? (
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', height: '200px' }}>
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
+                <div key={day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                  <div className="ns-skeleton" style={{ width: '100%', borderRadius: '4px 4px 0 0', height: `${[40, 75, 120, 85, 140, 60, 100][idx % 7]}px` }} />
+                  <span style={{ color: '#9CA3AF', fontSize: '12px' }}>{day}</span>
+                  <div className="ns-skeleton" style={{ width: '15px', height: '11px', borderRadius: '4px' }} />
+                </div>
+              ))}
+            </div>
+          ) : weeklyData.every(d => d.count === 0) ? (
             <div style={{ textAlign: 'center', padding: '60px 20px' }}>
               <p style={{ color: '#6B7280', marginBottom: '8px' }}>No activity data available yet.</p>
               <p style={{ color: '#4B5563', fontSize: '13px' }}>Participate in events and activities to see your engagement here.</p>
@@ -217,7 +265,7 @@ export default function DashboardPage({ onBack }) {
         </div>
 
         {/* Two Column Layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '48px' }}>
+        <div className="dashboard-two-col">
           
           {/* Activity Timeline */}
           <div style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', overflow: 'hidden' }}>
@@ -225,8 +273,12 @@ export default function DashboardPage({ onBack }) {
               <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFFFF' }}>Activity Timeline</h3>
               <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>Your recent actions</p>
             </div>
-            <div style={{ padding: activities.length === 0 ? '48px 24px' : '0' }}>
-              {activities.length === 0 ? (
+            <div style={{ padding: !loading && activities.length === 0 ? '48px 24px' : '0' }}>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonCard key={i} type="timeline-row" />
+                ))
+              ) : activities.length === 0 ? (
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ color: '#6B7280', marginBottom: '8px' }}>No recent activity</p>
                   <p style={{ color: '#4B5563', fontSize: '12px' }}>Your actions will appear here</p>
@@ -249,8 +301,14 @@ export default function DashboardPage({ onBack }) {
               <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFFFF' }}>Achievements</h3>
               <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>Badges earned</p>
             </div>
-            <div style={{ padding: achievements.length === 0 ? '48px 24px' : '24px' }}>
-              {achievements.length === 0 ? (
+            <div style={{ padding: !loading && achievements.length === 0 ? '48px 24px' : '24px' }}>
+              {loading ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <SkeletonCard key={i} type="achievement" />
+                  ))}
+                </div>
+              ) : achievements.length === 0 ? (
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ color: '#6B7280', marginBottom: '8px' }}>No achievements yet</p>
                   <p style={{ color: '#4B5563', fontSize: '12px' }}>Participate in events to earn badges</p>
@@ -279,12 +337,25 @@ export default function DashboardPage({ onBack }) {
               <p style={{ color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>Complete your profile to unlock more features</p>
             </div>
             <div style={{ flex: 1, maxWidth: '320px' }}>
-              <div style={{ background: '#2A2A2A', borderRadius: '100px', height: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${profileCompletion}%`, background: '#CC1111', height: '100%' }}></div>
-              </div>
-              <p style={{ textAlign: 'right', fontSize: '11px', color: '#4B5563', marginTop: '6px' }}>{profileCompletion}% Complete</p>
+              {loading ? (
+                <>
+                  <div className="ns-skeleton" style={{ width: '100%', height: '4px', borderRadius: '100px' }} />
+                  <div className="ns-skeleton" style={{ width: '50px', height: '11px', borderRadius: '4px', marginTop: '6px', float: 'right' }} />
+                </>
+              ) : (
+                <>
+                  <div style={{ background: '#2A2A2A', borderRadius: '100px', height: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: `${profileCompletion}%`, background: '#CC1111', height: '100%' }}></div>
+                  </div>
+                  <p style={{ textAlign: 'right', fontSize: '11px', color: '#4B5563', marginTop: '6px' }}>{profileCompletion}% Complete</p>
+                </>
+              )}
             </div>
-            <button style={{ background: 'transparent', border: '1px solid #CC1111', color: '#CC1111', padding: '8px 20px', borderRadius: '100px', fontSize: '12px', cursor: 'pointer' }}>Complete Profile</button>
+            {loading ? (
+              <div className="ns-skeleton" style={{ width: '125px', height: '31px', borderRadius: '100px' }} />
+            ) : (
+              <button style={{ background: 'transparent', border: '1px solid #CC1111', color: '#CC1111', padding: '8px 20px', borderRadius: '100px', fontSize: '12px', cursor: 'pointer' }}>Complete Profile</button>
+            )}
           </div>
         </div>
 

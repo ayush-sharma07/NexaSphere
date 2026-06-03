@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import DashboardStats from '../../components/admin/analytics/DashboardStats';
 import UserGrowthChart from '../../components/admin/analytics/UserGrowthChart';
 import EventAttendanceChart from '../../components/admin/analytics/EventAttendanceChart';
+import useLocalStorage from '../../hooks/useLocalStorage';
 import '../../components/admin/analytics/analytics.css';
 
 export default function AdminPage({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem('ns_admin_token'));
+  const [token, setToken] = useLocalStorage('ns_admin_token', null);
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [data, setData] = useState({
     stats: null,
@@ -29,7 +30,6 @@ export default function AdminPage({ onBack }) {
 
       if (statsRes.status === 401) {
         setToken(null);
-        localStorage.removeItem('ns_admin_token');
         throw new Error('Session expired. Please login again.');
       }
 
@@ -86,8 +86,6 @@ export default function AdminPage({ onBack }) {
 
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Login failed');
-
-      localStorage.setItem('ns_admin_token', result.token);
       setToken(result.token);
     } catch (err) {
       setError(err.message);
@@ -97,7 +95,6 @@ export default function AdminPage({ onBack }) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('ns_admin_token');
     setToken(null);
     setData({ stats: null, growth: [], events: [] });
   };

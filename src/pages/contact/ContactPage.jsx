@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Mail, MapPin, Phone, ExternalLink, MessageCircle, Check, Clipboard, Map } from 'lucide-react';
 import glbajajLogo from '../../assets/images/logos/glbajaj-logo.png';
+import { sanitizeInput } from '../../utils/security';
 
 /* ─────────────────────────────────────────────────────────
    NEXASPHERE — CONTACT PAGE
@@ -266,7 +267,7 @@ function MessageCTA() {
       <div style={{ marginBottom: 12 }}>
         <input
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={e => setName(sanitizeInput(e.target.value))}
           placeholder="Your name (optional)"
           style={{
             width: '100%', padding: '12px 16px',
@@ -284,7 +285,7 @@ function MessageCTA() {
       <div style={{ marginBottom: 16 }}>
         <textarea
           value={message}
-          onChange={e => setMessage(e.target.value)}
+          onChange={e => setMessage(sanitizeInput(e.target.value))}
           placeholder="Your message — what would you like to tell us?"
           rows={5}
           style={{
