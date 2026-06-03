@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Skeleton } from '../../components/Skeleton';
 import { events as fallbackEvents } from '../../data/eventsData';
 import { BannerOrbs } from '../../shared/MotionLayer';
 import Footer from '../../shared/Footer';
@@ -12,6 +13,11 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
   const [view, setView] = useState('timeline');
   const [recommendationView, setRecommendationView] = useState(false);
   const [scheduleView, setScheduleView] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+useEffect(() => {
+  const t = setTimeout(() => setIsLoading(false), 1200);
+  return () => clearTimeout(t);
+}, []);
 
   const sortedEvents = [...events].sort((a, b) => {
     return new Date(a.date) - new Date(b.date);
@@ -175,7 +181,20 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
           <PersonalizedFeed events={sortedEvents} onEventClick={onEventClick} />
         ) : view === 'timeline' ? (
           <div className="events-timeline ns-reveal">
-            {sortedEvents.map((ev, i) => {
+            {isLoading
+              ? Array.from({ length: 5 }).map((_, i) => (
+                <div className="timeline-item" key={i}>
+                  <div className="timeline-dot" />
+                  <div className="timeline-card" style={{ width: '100%' }}>
+                    <Skeleton height={22} width="60%" borderRadius={8} />
+                    <Skeleton height={14} width="35%" borderRadius={6} />
+                    <Skeleton height={48} width="100%" borderRadius={8} />
+                    <Skeleton height={24} width="40%" borderRadius={20} />
+                  </div>
+                </div>
+              
+                ))
+          : sortedEvents.map((ev, i) => {
               const hasDetailPage = !!ev.hasDetailPage;
               return (
                 <div className="timeline-item" key={ev.id}>

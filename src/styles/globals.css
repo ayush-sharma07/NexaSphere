@@ -179,6 +179,42 @@ button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent
 }
 
 
+/* ── Glassmorphic Skeleton Loader ── */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--card)  0%,
+    var(--c1a)   35%,
+    var(--c1b)   50%,
+    var(--c1a)   65%,
+    var(--card)  100%
+  );
+  background-size: 250% 100%;
+  animation: skeletonShimmer 1.8s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--bdr);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+[data-theme="light"] .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    rgba(230,57,70,0.06) 35%,
+    rgba(230,57,70,0.13) 50%,
+    rgba(230,57,70,0.06) 65%,
+    #f0f0f0 100%
+  );
+  background-size: 250% 100%;
+  border-color: var(--bdr);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
 /* ── Dashboard Responsive Grid (#268) ── */
 .dashboard-stats-grid {
   display: grid;
