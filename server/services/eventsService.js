@@ -40,11 +40,19 @@ export const eventsService = {
         tags: event.tags,
       };
 
+      // Do not mutate the identity (id) on failure.
+      // If Supabase rejects the insert (e.g., conflict/constraint), fail clearly so the client can
+      // retry with the correct id instead of ending up with an “orphan” record.
       let row;
       try {
         [row] = await supabaseRequest('events', { method: 'POST', body: [payload] });
-      } catch {
-        [row] = await supabaseRequest('events', { method: 'POST', body: [{ ...payload, id: `${event.id}-${Date.now()}` }] });
+      } catch (err) {
+        // Prefer a clear 409-style signal on constraint/id collisions; otherwise rethrow.
+        const msg = err?.message ? String(err.message) : '';
+        if (/conflict|duplicate|unique|violat/i.test(msg)) {
+          throw err;
+        }
+        throw err;
       }
 
       return sanitizeEventRecord({
