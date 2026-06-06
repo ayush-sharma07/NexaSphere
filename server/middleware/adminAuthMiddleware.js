@@ -89,7 +89,8 @@ async function requireAdmin(req, res, next) {
 
     req.adminSession = session;
     return next();
-  } catch {
+  } catch (err) {
+    console.error('requireAdmin error:', err);
     return res.status(500).json({ error: 'Unable to validate admin session' });
   }
 }

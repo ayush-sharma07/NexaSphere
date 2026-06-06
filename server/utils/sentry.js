@@ -3,8 +3,15 @@
  * Enterprise error tracking and monitoring
  */
 
-const Sentry = require("@sentry/node");
-const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+import * as Sentry from "@sentry/node";
+
+let nodeProfilingIntegration;
+try {
+  const profiling = await import("@sentry/profiling-node");
+  nodeProfilingIntegration = profiling.nodeProfilingIntegration;
+} catch (e) {
+  console.warn("Sentry profiling integration not available:", e.message);
+}
 
 /**
  * Initialize Sentry for backend monitoring
@@ -29,7 +36,7 @@ function initializeSentry(app) {
         request: true,
         serverName: true,
       }),
-      nodeProfilingIntegration(),
+      ...(nodeProfilingIntegration ? [nodeProfilingIntegration()] : []),
     ],
     tracesSampleRate: isDevelopment ? 1.0 : 0.1,
     profilesSampleRate: isDevelopment ? 1.0 : 0.1,
@@ -101,7 +108,7 @@ function addBreadcrumb(data) {
   });
 }
 
-module.exports = {
+export {
   Sentry,
   initializeSentry,
   addSentryErrorHandler,

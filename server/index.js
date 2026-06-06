@@ -22,6 +22,7 @@ import * as coreTeamController from './controllers/coreTeamController.js';
 import * as formsController from './controllers/formsController.js';
 import { eventsService } from './services/eventsService.js';
 import { coreTeamService } from './services/coreTeamService.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -624,6 +625,10 @@ app.post('/api/core-team/apply', formsController.makeHandleForm('core_team'));
 
 app.post('/api/submissions/membership', formsController.makeHandleForm('membership'));
 app.post('/api/submissions/recruitment', formsController.makeHandleForm('recruitment'));
+
+// Centralized error handling (must be registered last)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const port = Number(process.env.PORT || 8787);
 if (process.env.NODE_ENV !== 'test' && !process.env.SKIP_SERVER_LISTEN) {

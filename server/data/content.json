@@ -13,10 +13,39 @@
         "Learning",
         "Community"
       ],
-      "createdAt": "2026-05-16T14:16:44.356Z",
-      "updatedAt": "2026-05-16T14:16:44.358Z"
+      "createdAt": "2026-06-06T14:11:46.472Z",
+      "updatedAt": "2026-06-06T14:11:46.478Z"
     }
   ],
   "activityEvents": {},
-  "coreTeam": []
+  "coreTeam": [
+    {
+      "name": "John Doe",
+      "role": "Developer",
+      "year": "3rd",
+      "branch": "CSE",
+      "section": "A",
+      "email": "john@glbajajgroup.org",
+      "whatsapp": "1234567890",
+      "linkedin": null,
+      "instagram": null,
+      "photoUrl": null,
+      "id": "c00174b2-b9d2-4269-b0f1-5494d57d6ae2",
+      "createdAt": "2026-06-06T14:13:20.174Z"
+    },
+    {
+      "name": "John Doe",
+      "role": "Developer",
+      "year": "3rd",
+      "branch": "CSE",
+      "section": "A",
+      "email": "john@glbajajgroup.org",
+      "whatsapp": "1234567890",
+      "linkedin": null,
+      "instagram": null,
+      "photoUrl": null,
+      "id": "4895ba36-47d6-4744-ac35-eb0234f69af1",
+      "createdAt": "2026-06-06T14:13:47.843Z"
+    }
+  ]
 }

@@ -3,11 +3,9 @@
  * Structured logging for all backend operations
  */
 
-const winston = require("winston");
-const path = require("path");
-
-// Create logs directory if it doesn't exist
-const fs = require("fs");
+import winston from "winston";
+import path from "path";
+import fs from "fs";
 const logsDir = path.join(process.cwd(), "logs");
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
@@ -99,4 +97,4 @@ const logger = winston.createLogger({
   ],
 });
 
-module.exports = logger;
+export default logger;
