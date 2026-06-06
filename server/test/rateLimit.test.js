@@ -10,6 +10,7 @@ process.env.CONTENT_RATE_LIMIT_MAX = '2';
 process.env.CONTENT_RATE_LIMIT_WINDOW_MS = '60000';
 process.env.ADMIN_LOGIN_RATE_LIMIT_MAX = '2';
 process.env.ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS = '60000';
+process.env.ADMIN_EVENT_PASSWORD = process.env.ADMIN_EVENT_PASSWORD || 'TestEventPassword123!';
 
 const { default: app } = await import('../index.js');
 
