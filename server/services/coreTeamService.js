@@ -105,7 +105,14 @@ export const coreTeamService = {
 
   async assertCanManageActivityEvent(body) {
     const gate = normalizeCoreTeamGate(body);
-    const expectedPassword = process.env.ADMIN_EVENT_PASSWORD || 'Admin@123';
+    if (!gate.name || !gate.email || !gate.phone || !gate.password) {
+      throw new UnauthorizedError('Unauthorized. Missing admin gate fields.');
+    }
+
+    const expectedPassword = process.env.ADMIN_EVENT_PASSWORD;
+    if (!expectedPassword) {
+      throw new UnauthorizedError('Unauthorized. Admin event password is not configured on the server.');
+    }
     if (gate.password !== expectedPassword) {
       throw new UnauthorizedError('Unauthorized. Core team details or password did not match.');
     }

@@ -1,4 +1,8 @@
 import 'dotenv/config';
+
+if (!process.env.ADMIN_EVENT_PASSWORD && process.env.NODE_ENV !== 'test') {
+  throw new Error('FATAL: ADMIN_EVENT_PASSWORD environment variable is required but not set.');
+}
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
