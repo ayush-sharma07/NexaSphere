@@ -2,43 +2,24 @@ import { supabaseRequest, HAS_SUPABASE } from '../storage/supabaseClient.js';
 import { readContent, writeContent } from '../storage/contentFileStore.js';
 import { sanitizeEventRecord } from '../utils/sanitize.js';
 import { eventSchema, eventPatchSchema } from '../validators/eventSchemas.js';
+import { mapEventRowToApi, mapEventInputToDb } from '../utils/eventMapper.js';
 
 export const eventsService = {
   async listEvents() {
     if (HAS_SUPABASE) {
       const rows = await supabaseRequest('events?select=*&order=created_at.desc');
-      return rows.map((row) => sanitizeEventRecord({
-        id: row.id,
-        name: row.name,
-        shortName: row.short_name || row.shortName || row.name,
-        date: row.date_text || row.date,
-        description: row.description,
-        status: row.status,
-        icon: row.icon || 'Pin',
-        tags: Array.isArray(row.tags) ? row.tags : [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      }));
+      return rows.map((row) => sanitizeEventRecord(mapEventRowToApi(row)));
     }
 
     const content = await readContent();
-    return (content.events || []).map((event) => sanitizeEventRecord(event));
+    return (content.events || []).map((event) => sanitizeEventRecord(mapEventRowToApi(event)));
   },
 
   async createEvent(input) {
     const event = eventSchema.parse(input);
 
     if (HAS_SUPABASE) {
-      const payload = {
-        id: event.id,
-        name: event.name,
-        short_name: event.shortName,
-        date_text: event.date,
-        description: event.description,
-        status: event.status,
-        icon: event.icon,
-        tags: event.tags,
-      };
+      const payload = mapEventInputToDb(event);
 
       // Do not mutate the identity (id) on failure.
       // If Supabase rejects the insert (e.g., conflict/constraint), fail clearly so the client can
@@ -55,59 +36,32 @@ export const eventsService = {
         throw err;
       }
 
-      return sanitizeEventRecord({
-        id: row.id,
-        name: row.name,
-        shortName: row.short_name || row.name,
-        date: row.date_text,
-        description: row.description,
-        status: row.status,
-        icon: row.icon || 'Pin',
-        tags: Array.isArray(row.tags) ? row.tags : [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      });
+      return sanitizeEventRecord(mapEventRowToApi(row));
     }
 
     const content = await readContent();
     content.events = content.events || [];
     const now = new Date().toISOString();
-    content.events.unshift({ ...event, createdAt: now, updatedAt: now });
+    const newEvent = { ...event, createdAt: now, updatedAt: now };
+    content.events.unshift(newEvent);
     await writeContent(content);
-    return sanitizeEventRecord(content.events[0]);
+    return sanitizeEventRecord(mapEventRowToApi(content.events[0]));
   },
 
   async updateEvent(id, input) {
     const patch = eventPatchSchema.parse({ ...input, id });
 
     if (HAS_SUPABASE) {
+      const dbPayload = mapEventInputToDb(patch);
+      dbPayload.updated_at = new Date().toISOString();
+
       const [row] = await supabaseRequest(`events?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
-        body: {
-          name: patch.name,
-          short_name: patch.shortName,
-          date_text: patch.date,
-          description: patch.description,
-          status: patch.status,
-          icon: patch.icon,
-          tags: patch.tags,
-          updated_at: new Date().toISOString(),
-        },
+        body: dbPayload,
       });
 
       if (!row) return null;
-      return sanitizeEventRecord({
-        id: row.id,
-        name: row.name,
-        shortName: row.short_name || row.name,
-        date: row.date_text,
-        description: row.description,
-        status: row.status,
-        icon: row.icon || 'Pin',
-        tags: Array.isArray(row.tags) ? row.tags : [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      });
+      return sanitizeEventRecord(mapEventRowToApi(row));
     }
 
     const content = await readContent();
@@ -116,7 +70,7 @@ export const eventsService = {
 
     content.events[index] = { ...content.events[index], ...patch, id, updatedAt: new Date().toISOString() };
     await writeContent(content);
-    return sanitizeEventRecord(content.events[index]);
+    return sanitizeEventRecord(mapEventRowToApi(content.events[index]));
   },
 
   async deleteEvent(id) {

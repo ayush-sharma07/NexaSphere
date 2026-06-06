@@ -1,29 +1,16 @@
 import { withDb } from './db.js';
-
-function mapRow(row) {
-  return {
-    id: row.id,
-    name: row.name,
-    shortName: row.short_name,
-    date: row.date_text,
-    description: row.description,
-    status: row.status,
-    icon: row.icon,
-    tags: Array.isArray(row.tags) ? row.tags : row.tags ?? [],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
+import { mapEventRowToApi, mapEventInputToDb } from '../utils/eventMapper.js';
 
 export const eventsRepository = {
   async list() {
     return withDb(async (client) => {
       const { rows } = await client.query('select * from events order by created_at desc');
-      return rows.map(mapRow);
+      return rows.map(mapEventRowToApi);
     });
   },
 
   async create(event) {
+    const dbRow = mapEventInputToDb(event);
     return withDb(async (client) => {
       const { rows } = await client.query(
         `insert into events (id, name, short_name, date_text, description, status, icon, tags)
@@ -38,13 +25,14 @@ export const eventsRepository = {
            tags=excluded.tags,
            updated_at=now()
          returning *`,
-        [event.id, event.name, event.shortName, event.date, event.description, event.status, event.icon, event.tags]
+        [dbRow.id, dbRow.name, dbRow.short_name, dbRow.date_text, dbRow.description, dbRow.status, dbRow.icon, dbRow.tags]
       );
-      return mapRow(rows[0]);
+      return mapEventRowToApi(rows[0]);
     });
   },
 
   async update(id, patch) {
+    const dbRow = mapEventInputToDb(patch);
     return withDb(async (client) => {
       const { rows } = await client.query(
         `update events set
@@ -58,10 +46,10 @@ export const eventsRepository = {
            updated_at = now()
          where id = $1
          returning *`,
-        [id, patch.name ?? null, patch.shortName ?? null, patch.date ?? null, patch.description ?? null, patch.status ?? null, patch.icon ?? null, patch.tags ?? null]
+        [id, dbRow.name ?? null, dbRow.short_name ?? null, dbRow.date_text ?? null, dbRow.description ?? null, dbRow.status ?? null, dbRow.icon ?? null, dbRow.tags ?? null]
       );
       if (!rows.length) return null;
-      return mapRow(rows[0]);
+      return mapEventRowToApi(rows[0]);
     });
   },
 
@@ -72,4 +60,3 @@ export const eventsRepository = {
     });
   },
 };
-
