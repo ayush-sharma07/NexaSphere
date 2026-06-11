@@ -1,23 +1,33 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'http';
+import { initializeSocketIO } from './config/socket.js';
 import { google } from 'googleapis';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import { EventEmitter } from 'events';
 import { sendWelcomeVerificationEmail } from './services/emailService.js';
 import { ZodError } from 'zod';
 import { normalizeFormSubmission } from './validators/formSchemas.js';
-import * as adminAuthMiddleware from './middleware/adminAuthMiddleware.js';
+import { eventsService as eventsServiceModule } from './services/eventsService.js';
+import * as eventsController from './controllers/eventsController.js';
+import * as activityEventsController from './controllers/activityEventsController.js';
+import { coreTeamService } from './services/coreTeamService.js';
+import * as coreTeamController from './controllers/coreTeamController.js';
+import * as formsController from './controllers/formsController.js';
 import analyticsRouter from './routes/analytics.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 const CONTENT_FILE = path.join(__dirname, 'data', 'content.json');
 
+const { adminAuthMiddleware } = await import('./middleware/adminAuthMiddleware.js');
+
 const app = express();
-const adminEvents = new EventEmitter();
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((value) => value.trim()).filter(Boolean) : true,
@@ -483,7 +493,7 @@ function isPhoneish(s) {
 }
 
 app.get('/healthz', async (req, res) => {
-  const events = await eventsService.listEvents();
+  const events = await eventsServiceModule.listEvents();
   res.json({ ok: true, events: events.length, storage: HAS_SUPABASE ? 'supabase' : 'file' });
 });
 
@@ -519,46 +529,19 @@ app.get('/api/admin/core-team', adminAuth, coreTeamController.adminListCoreTeamM
 app.post('/api/admin/core-team', adminAuth, coreTeamController.adminAddCoreTeamMember);
 app.delete('/api/admin/core-team/:id', adminAuth, coreTeamController.adminDeleteCoreTeamMember);
 
-    const savedToSupabase = await appendToSupabaseForms(formType, payload);
-    try {
-      await appendFormToSheet(formType, payload);
-    } catch (sheetErr) {
-      if (!savedToSupabase) throw sheetErr;
-    }
-
-    // NEW: Send a welcome email to the user
-    try {
-      const verifyUrl = `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/verify?email=${encodeURIComponent(req.body.collegeEmail)}`;
-      await sendWelcomeVerificationEmail(req.body.collegeEmail, req.body.fullName, verifyUrl);
-    } catch (emailErr) {
-      console.error('[Form Handler] Failed to send welcome email:', emailErr);
-      // We don't fail the whole request if email fails, but we log it.
-    }
-
-    return res.json({ ok: true });
-  } catch (e) {
-    if (e instanceof ZodError) {
-      return res.status(400).json({
-        error: 'Invalid form submission',
-        issues: e.issues.map((issue) => ({
-          path: issue.path.join('.'),
-          message: issue.message,
-        })),
-      });
-    }
-    return res.status(500).json({ error: e?.message || 'Submission failed' });
-  }
-}
-
 app.post('/api/forms/membership', formsController.makeHandleForm('membership'));
 app.post('/api/forms/recruitment', formsController.makeHandleForm('recruitment'));
 app.post('/api/core-team/apply', formsController.makeHandleForm('core_team'));
+
+
 
 const port = Number(process.env.PORT || 8787);
 if (!process.env.VERCEL) {
   const boot = HAS_SUPABASE ? Promise.resolve() : ensureContentFile();
   boot.then(() => {
-    app.listen(port, () => {
+    const httpServer = createServer(app);
+    initializeSocketIO(httpServer);
+    httpServer.listen(port, () => {
       console.log(`NexaSphere server listening on http://localhost:${port}`);
     });
   });

@@ -33,6 +33,7 @@ import EventsPage from './pages/events/EventsPage';
 import AboutPage from './pages/about/AboutPage';
 import TeamPage from './pages/team/TeamPage';
 import ContactPage from './pages/contact/ContactPage';
+import RealTimeDashboard from './components/RealTimeDashboard';
 import RecruitmentPage from './pages/recruitment/RecruitmentPage';
 import MembershipPage from './pages/membership/MembershipPage';
 
@@ -156,8 +157,11 @@ function SectionContent({ page, eventsData, actions }) {
       return <PageIn k="pg-about"><AboutPage onBack={actions.onBackHome} /></PageIn>;
     case 'Team':
       return <PageIn k="pg-team"><TeamPage onBack={actions.onBackHome} onApply={actions.openApply} /></PageIn>;
-    case 'Contact':
+    
+      case 'Contact':
       return <PageIn k="pg-contact"><ContactPage onBack={actions.onBackHome} /></PageIn>;
+    case 'Dashboard':
+      return <PageIn k="pg-dashboard"><RealTimeDashboard /></PageIn>;
     default:
       return null;
   }

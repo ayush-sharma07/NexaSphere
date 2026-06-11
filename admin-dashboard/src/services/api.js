@@ -118,7 +118,8 @@ async function fetchWithAuth(url, options = {}) {
         });
       }
     }, 300); // simulate slight network delay
-=======
+  });
+
   const res = await fetch(`${API_BASE}${url}`, {
     ...options,
     headers: {
@@ -126,7 +127,6 @@ async function fetchWithAuth(url, options = {}) {
       Authorization: `Bearer ${auth.getToken()}`,
       ...options.headers,
     },
->>>>>>> upstream/main
   });
 
   if (res.status === 401) {
@@ -181,17 +181,7 @@ export const api = {
   coreTeam: {
     getAll: async () => {
       const result = await fetchWithAuth('/api/admin/core-team');
-<<<<<<< HEAD
-      const members = result?.members ?? result ?? [];
-
-      if (members.length === 0) {
-        const seeded = getDb('core_team', []);
-        return { members: seeded };
-      }
-      return { members };
-=======
       return { members: result?.members ?? [] };
->>>>>>> upstream/main
     },
     add: async (member) => {
       const result = await fetchWithAuth('/api/admin/core-team', { method: 'POST', body: JSON.stringify(member) });

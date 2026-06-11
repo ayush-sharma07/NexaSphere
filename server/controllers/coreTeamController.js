@@ -1,5 +1,4 @@
 import { coreTeamService } from '../services/coreTeamService.js';
-import { wrapAsync } from '../middleware/asyncHandler.js';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
 
 function toSafeString(value, max = 4000) {
@@ -22,12 +21,7 @@ function isEmail(s) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || '').trim());
 }
 
-function wrapAsync(fn) {
-  return (req, res) =>
-    Promise.resolve(fn(req, res)).catch((e) => {
-      res.status(500).json({ error: e?.message || 'Internal server error' });
-    });
-}
+import { wrapAsync } from '../middleware/asyncHandler.js';
 
 export const adminListCoreTeamMembers = wrapAsync(async (req, res) => {
   const members = await coreTeamService.listMembers();

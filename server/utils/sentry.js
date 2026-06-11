@@ -4,7 +4,6 @@
  */
 
 const Sentry = require("@sentry/node");
-const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 
 /**
  * Initialize Sentry for backend monitoring
@@ -29,7 +28,6 @@ function initializeSentry(app) {
         request: true,
         serverName: true,
       }),
-      nodeProfilingIntegration(),
     ],
     tracesSampleRate: isDevelopment ? 1.0 : 0.1,
     profilesSampleRate: isDevelopment ? 1.0 : 0.1,
