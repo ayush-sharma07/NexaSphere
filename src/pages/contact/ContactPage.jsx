@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { Mail, MapPin, Phone, ExternalLink, MessageCircle, Check, Clipboard, Map } from 'lucide-react';
 import glbajajLogo from '../../assets/images/logos/glbajaj-logo.png';
+import { sanitizeInput } from '../../utils/security';
 
 /* ─────────────────────────────────────────────────────────
    NEXASPHERE — CONTACT PAGE
@@ -63,7 +65,7 @@ function ContactCard({ icon, label, value, href, delay = 0, color }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
-      <style>{`@keyframes contactBurst{to{transform:translate(var(--tx),var(--ty));opacity:0}}`}</style>
+      {/* contactBurst keyframes are defined globally in ContactPage.css to avoid layout paint recalculations */}
 
       
       <div style={{
@@ -135,7 +137,7 @@ function MapSection() {
           display: 'inline-flex', alignItems: 'center', gap: 8,
           fontFamily: 'Space Mono,monospace', fontSize: '.65rem',
           color: 'var(--t3)', letterSpacing: '.28em', textTransform: 'uppercase',
-        }}>📍 FIND US</span>
+        }}><MapPin size={13} aria-hidden="true" /> FIND US</span>
         <h3 style={{
           fontFamily: 'Orbitron,monospace', fontSize: 'clamp(1.1rem,3vw,1.6rem)',
           fontWeight: 700, marginTop: 8, marginBottom: 6,
@@ -166,7 +168,7 @@ function MapSection() {
             flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: 12, zIndex: 2, background: 'var(--card)',
           }}>
-            <div style={{ fontSize: '2rem', animation: 'float 2s ease-in-out infinite' }}>📍</div>
+            <div style={{ display: 'flex', animation: 'float 2s ease-in-out infinite', color: 'var(--t3)' }}><MapPin size={32} aria-hidden="true" /></div>
             <div style={{
               fontFamily: 'Space Mono,monospace', fontSize: '.6rem',
               color: 'var(--t3)', letterSpacing: '.2em',
@@ -217,9 +219,9 @@ function MapSection() {
           href="https://maps.google.com/?q=GL+Bajaj+Group+of+Institutions+Mathura"
           target="_blank" rel="noopener noreferrer"
           className="btn btn-outline btn-sm"
-          style={{ display: 'inline-flex' }}
+          style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
         >
-          🗺️ Open in Google Maps
+          <Map size={14} aria-hidden="true" /> Open in Google Maps
         </a>
       </div>
     </div>
@@ -249,7 +251,7 @@ function MessageCTA() {
       <div className="corner-tl"/><div className="corner-br"/>
 
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ fontSize: '2.2rem', marginBottom: 12 }}>✉️</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--c1)' }}><Mail size={36} aria-hidden="true" /></div>
         <h3 style={{
           fontFamily: 'Orbitron,monospace', fontSize: 'clamp(1rem,2.5vw,1.3rem)',
           fontWeight: 700, marginBottom: 8,
@@ -265,7 +267,7 @@ function MessageCTA() {
       <div style={{ marginBottom: 12 }}>
         <input
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={e => setName(sanitizeInput(e.target.value))}
           placeholder="Your name (optional)"
           style={{
             width: '100%', padding: '12px 16px',
@@ -283,7 +285,7 @@ function MessageCTA() {
       <div style={{ marginBottom: 16 }}>
         <textarea
           value={message}
-          onChange={e => setMessage(e.target.value)}
+          onChange={e => setMessage(sanitizeInput(e.target.value))}
           placeholder="Your message — what would you like to tell us?"
           rows={5}
           style={{
@@ -303,16 +305,16 @@ function MessageCTA() {
         <a
           href={`mailto:${EMAIL}?subject=${subject}&body=${body}`}
           className="btn btn-primary btn-ripple"
-          style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
+          style={{ flex: 1, minWidth: 0, justifyContent: 'center', gap: 6 }}
         >
-          📧 Open Email App
+          <Mail size={14} aria-hidden="true" /> Open Email App
         </a>
         <button
           className="btn btn-outline btn-ripple"
           onClick={handleCopy}
-          style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
+          style={{ flex: 1, minWidth: 0, justifyContent: 'center', gap: 6 }}
         >
-          {copied ? '✅ Copied!' : '📋 Copy Email'}
+          {copied ? <><Check size={14} aria-hidden="true" /> Copied!</> : <><Clipboard size={14} aria-hidden="true" /> Copy Email</>}
         </button>
       </div>
 
@@ -449,19 +451,19 @@ export default function ContactPage({ onBack }) {
           className="cin-container"
         >
           <ContactCard
-            icon="📧" label="Email" delay={0}
+            icon={<Mail size={28} color="var(--c1)" aria-hidden="true" />} label="Email" delay={0}
             value={EMAIL}
             href={`mailto:${EMAIL}`}
             color="var(--c1)"
           />
           <ContactCard
-            icon="🔗" label="LinkedIn" delay={0.08}
+            icon={<ExternalLink size={28} color="var(--c2)" aria-hidden="true" />} label="LinkedIn" delay={0.08}
             value="NexaSphere · GL Bajaj"
             href={LINKEDIN}
             color="var(--c2)"
           />
           <ContactCard
-            icon="💬" label="WhatsApp Community" delay={0.16}
+            icon={<MessageCircle size={28} color="var(--c5)" aria-hidden="true" />} label="WhatsApp Community" delay={0.16}
             value="Join our active community group"
             href={WHATSAPP}
             color="var(--c5)"
@@ -504,9 +506,9 @@ export default function ContactPage({ onBack }) {
           </p>
           <a
             href="tel:+915652400400"
-            style={{ display: 'block', marginTop: 10, color: 'var(--c1)', fontSize: '.85rem', fontWeight: 600 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, color: 'var(--c1)', fontSize: '.85rem', fontWeight: 600 }}
           >
-            📞 +91-565-2400400
+            <Phone size={14} aria-hidden="true" /> +91-565-2400400
           </a>
         </div>
 

@@ -1,3 +1,5 @@
+import { ValidationError } from './errors.js';
+
 const HTML_ESCAPE_MAP = {
   '&': '&amp;',
   '<': '&lt;',
@@ -47,7 +49,10 @@ function isEmail(value) {
 function validateWhatsApp(value) {
   const normalized = normalizePhone(value);
   if (!/^\d{10}$/.test(normalized)) {
-    throw new Error('WhatsApp must be exactly 10 digits');
+    throw new ValidationError('WhatsApp must be exactly 10 digits', {
+      field: 'whatsapp',
+      value,
+    });
   }
   return normalized;
 }
@@ -55,7 +60,10 @@ function validateWhatsApp(value) {
 function validateSection(value) {
   const normalized = String(value ?? '').trim().toUpperCase();
   if (!/^[A-Z]$/.test(normalized)) {
-    throw new Error('Section must be a single letter (A-Z)');
+    throw new ValidationError('Section must be a single letter (A-Z)', {
+      field: 'section',
+      value,
+    });
   }
   return normalized;
 }

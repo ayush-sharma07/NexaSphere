@@ -1,12 +1,15 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { activities } from '../../data/activitiesData';
 import { activityPages } from '../../data/activities/index';
 import { DynamicIcon } from '../../shared/Icons';
+import SkeletonCard from '../../components/SkeletonCard';
 
 /* Anti-gravity delays — same pattern as team cards */
 const AG_DELAYS = [0, -2.1, -4.2, -1.0, -3.3, -5.5, -0.7, -6.1];
 
 function ActivityCard({ a, idx, onNav }) {
+  const { t } = useTranslation();
   const ref      = useRef(null);
   const agDelay  = AG_DELAYS[idx % AG_DELAYS.length];
 
@@ -42,6 +45,12 @@ function ActivityCard({ a, idx, onNav }) {
 
   const color = a.color || 'var(--c1)';
 
+  // Translate dynamically
+  const translatedTitle = t(`activities.list.${a.title}.title`, a.title);
+  const translatedDesc = t(`activities.list.${a.title}.description`, a.description);
+  const translatedChips = a.chips?.map(chip => t(`activities.list.${a.title}.chips.${chip}`, chip)) || [];
+  const translatedFeatures = a.features?.map((f, i) => t(`activities.list.${a.title}.features.${i}`, f)) || [];
+
   return (
     <div
       ref={ref}
@@ -63,12 +72,12 @@ function ActivityCard({ a, idx, onNav }) {
       <div className="card-accent-line" style={{ background: color }}/>
       <div className="card-num" style={{ color: `${color}80` }}>{String(idx + 1).padStart(2, '0')}</div>
       <div className="activity-icon" style={{ color: color, marginBottom: '6px' }}><DynamicIcon name={a.icon} size={34} /></div>
-      <div className="activity-title" style={{ color: color, fontSize: '.9rem', fontWeight: 700 }}>{a.title}</div>
-      <p className="activity-desc" style={{ flexGrow: 1, textAlign: 'justify', fontSize: '.78rem', marginBottom: '20px' }}>{a.description}</p>
+      <div className="activity-title" style={{ color: color, fontSize: '.9rem', fontWeight: 700 }}>{translatedTitle}</div>
+      <p className="activity-desc" style={{ flexGrow: 1, textAlign: 'justify', fontSize: '.78rem', marginBottom: '20px' }}>{translatedDesc}</p>
       
-      {a.chips && (
+      {translatedChips.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
-          {a.chips.map(chip => (
+          {translatedChips.map(chip => (
             <span key={chip} style={{ 
               fontSize: '.6rem', padding: '3px 8px', borderRadius: '12px', 
               background: `${color}18`, color: color, border: `1px solid ${color}35`,
@@ -78,9 +87,9 @@ function ActivityCard({ a, idx, onNav }) {
         </div>
       )}
 
-      {a.features && (
+      {translatedFeatures.length > 0 && (
         <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px" }}>
-          {a.features.map((f, i) => (
+          {translatedFeatures.map((f, i) => (
             <li key={i} style={{ fontSize: '.75rem', color: "var(--t2)", padding: "3px 0", display: "flex", gap: "6px" }}>
               <span style={{ color: color, fontWeight: 700 }}>→</span> {f}
             </li>
@@ -89,10 +98,10 @@ function ActivityCard({ a, idx, onNav }) {
       )}
 
       {hasContent ? (
-        <div className="activity-cta" style={{ color: color, marginTop: 'auto' }}><span>View Session</span><span>→</span></div>
+        <div className="activity-cta" style={{ color: color, marginTop: 'auto' }}><span>{t('activities.view_session')}</span><span>→</span></div>
       ) : (
         <div className="activity-cta" style={{ opacity: 0.45, cursor: 'default', marginTop: 'auto' }}>
-          <span>Coming Soon</span>
+          <span>{t('activities.coming_soon')}</span>
         </div>
       )}
       <div className="corner-tl" style={{ borderColor: color }}/><div className="corner-br" style={{ borderColor: color }}/>
@@ -101,6 +110,14 @@ function ActivityCard({ a, idx, onNav }) {
 }
 
 export default function ActivitiesSection({ onNavigate }) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 750);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
@@ -123,18 +140,23 @@ export default function ActivitiesSection({ onNavigate }) {
     <section className="section" id="section-activities">
       <div className="container">
         <div className="reveal-stagger">
-          <h2 className="section-title pop-word">Our Activities</h2>
+          <h2 className="section-title pop-word">{t('activities.title')}</h2>
           <p className="section-subtitle pop-in" style={{ animationDelay: '.1s' }}>
-            Click any activity to explore sessions &amp; events
+            {t('activities.subtitle_home')}
           </p>
         </div>
         <div className="activity-grid cin-container">
-          {activities.map((a, i) => (
-            <ActivityCard key={a.id} a={a} idx={i} onNav={onNavigate}/>
-          ))}
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} type="activity" />
+            ))
+          ) : (
+            activities.map((a, i) => (
+              <ActivityCard key={a.id} a={a} idx={i} onNav={onNavigate}/>
+            ))
+          )}
         </div>
       </div>
     </section>
   );
 }
-

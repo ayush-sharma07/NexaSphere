@@ -1,6 +1,39 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeAll, beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
 import HeroSection from '../pages/home/HeroSection';
+
+// Initialise i18next once before all tests so useTranslation() resolves keys
+beforeAll(async () => {
+  if (!i18n.isInitialized) {
+    await i18n.use(initReactI18next).init({
+      lng: 'en',
+      fallbackLng: 'en',
+      interpolation: { escapeValue: false },
+      resources: {
+        en: {
+          translation: {
+            hero: {
+              tagline: "GL Bajaj's Student-Driven Tech Ecosystem",
+              join_as_member: 'Join as Member',
+              core_team: 'Core Team',
+              want_to_be_part: 'Want to be part of the NexaSphere Core Team?',
+              apply_for_core_team: 'Apply for Core Team',
+              scroll: 'SCROLL',
+              stats: {
+                members: 'Members',
+                activities: 'Activities',
+                events_done: 'Events Done',
+                ideas: 'Ideas',
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+});
 
 describe('HeroSection Component', () => {
   const mockOnTabChange = vi.fn();

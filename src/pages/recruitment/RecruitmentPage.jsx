@@ -383,6 +383,7 @@ export default function RecruitmentPage({ onBack }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState('');
   const [showRoles, setShowRoles] = useState(false); 
   const topRef = useRef(null);
 
@@ -968,6 +969,7 @@ export default function RecruitmentPage({ onBack }) {
         throw new Error(data?.error || 'Submission failed');
       }
 
+      setSubmittedEmail(payload.collegeEmail);
       setDone(true);
       scrollTop();
     } catch (e) {
@@ -1188,6 +1190,7 @@ export default function RecruitmentPage({ onBack }) {
           <div className="apply-body">
             {done ? (
               <div style={{ display: 'grid', gap: 18 }}>
+                {/* ── Confirmation banner ── */}
                 <div style={{
                   background: 'linear-gradient(135deg, rgba(0,212,255,.08), rgba(123,111,255,.06))',
                   border: '1px solid var(--bdr2)',
@@ -1198,19 +1201,68 @@ export default function RecruitmentPage({ onBack }) {
                   textAlign: 'center',
                 }}>
                   <div className="corner-tl"/><div className="corner-br"/>
-                  <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--c1)', marginBottom: 12 }}><DynamicIcon name="CheckCircle" size={32} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--c1)', marginBottom: 12 }}>
+                    <DynamicIcon name="CheckCircle" size={32} />
+                  </div>
                   <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1rem', color: 'var(--t1)', fontWeight: 700, marginBottom: 12 }}>
                     Application Submitted Successfully
                   </div>
                   <p style={{ color: 'var(--t2)', lineHeight: 1.8, maxWidth: 520, margin: '0 auto' }}>
-                    Thank you for applying to the NexaSphere Core Team - GL Bajaj Group of Institutions.
+                    Thank you for applying to the NexaSphere Core Team — GL Bajaj Group of Institutions. 🎉
                     <br/><br/>
-                    Your application has been recorded. Shortlisted candidates will be contacted regarding the next steps, which may include a short assessment or trial session.
-                    <br/><br/>
-                    <b style={{ color: 'var(--t1)' }}>Stay consistent. Stay curious. Keep building.</b>
+                    Submitted email: <b style={{ color: 'var(--t1)' }}>{submittedEmail || form.collegeEmail}</b>
+                    <br/>
+                    If email notifications are enabled, a confirmation receipt will be sent there.
                   </p>
                 </div>
 
+                {/* ── What happens next ── */}
+                <div style={{
+                  background: 'var(--card)', border: '1px solid var(--bdr)',
+                  borderRadius: 'var(--r3)', padding: '18px 20px',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div className="corner-tl"/>
+                  <div style={{
+                    fontFamily: 'Orbitron,monospace', fontSize: '.7rem',
+                    letterSpacing: '.16em', textTransform: 'uppercase',
+                    color: 'var(--c1)', marginBottom: 14,
+                  }}>What Happens Next</div>
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    {[
+                      {
+                        icon: '📋',
+                        title: 'Step 1 — Application recorded (Done)',
+                        desc: 'Your full application has been saved to the NexaSphere Core Team recruitment sheet. No further action needed from your end.',
+                      },
+                      {
+                        icon: '🔍',
+                        title: 'Step 2 — Review & Shortlisting (1–2 weeks)',
+                        desc: 'The NexaSphere leadership team will review all applications carefully. Shortlisted candidates will receive a WhatsApp message or email notification.',
+                      },
+                      {
+                        icon: '🧪',
+                        title: 'Step 3 — Screening (if shortlisted)',
+                        desc: 'Shortlisted applicants may be invited to a short trial session, task, or interaction to evaluate fit, consistency, and teamwork. Details will be shared over WhatsApp.',
+                      },
+                    ].map(s => (
+                      <div key={s.title} style={{
+                        display: 'flex', gap: 14, alignItems: 'flex-start',
+                        padding: '12px 14px',
+                        background: 'var(--card2)', border: '1px solid var(--bdr)',
+                        borderRadius: 'var(--r2)',
+                      }}>
+                        <span style={{ fontSize: '1.2rem', flexShrink: 0, marginTop: 2 }}>{s.icon}</span>
+                        <div>
+                          <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, color: 'var(--t1)', fontSize: '.96rem', marginBottom: 3 }}>{s.title}</div>
+                          <div style={{ fontSize: '.86rem', color: 'var(--t2)', lineHeight: 1.6 }}>{s.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── CTA buttons ── */}
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
                   <a className="btn btn-whatsapp" href={WHATSAPP_SCREENING} target="_blank" rel="noopener noreferrer">
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -1222,6 +1274,20 @@ export default function RecruitmentPage({ onBack }) {
                       Join NexaSphere Community <IconArrowRight />
                     </span>
                   </a>
+                </div>
+
+                {/* ── Footer note ── */}
+                <div style={{
+                  background: 'var(--card)', border: '1px solid var(--bdr)',
+                  borderRadius: 'var(--r2)', padding: '14px 16px',
+                  fontSize: '.88rem', color: 'var(--t3)', lineHeight: 1.7, textAlign: 'center',
+                }}>
+                  📌 Questions? Reach us at{' '}
+                  <a href="mailto:nexasphere@glbajajgroup.org" style={{ color: 'var(--c1)', textDecoration: 'none' }}>
+                    nexasphere@glbajajgroup.org
+                  </a>
+                  <br/>
+                  <b style={{ color: 'var(--t2)' }}>Stay consistent. Stay curious. Keep building. 🚀 — NexaSphere Team</b>
                 </div>
               </div>
             ) : (

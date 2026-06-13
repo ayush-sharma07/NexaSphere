@@ -227,15 +227,26 @@ function MediaBtn({ href, icon, label, color }) {
 
 export default function EventDetailPage({ event, activityColor, activityIcon, onBack }) {
   const [mounted, setMounted] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState('overview');
   useEffect(() => { window.scrollTo({ top: 0 }); setTimeout(() => setMounted(true), 60); }, []);
 
   const color = activityColor || '#a855f7';
   const rgb = hexToRgb(color);
+  const status = event.status === 'upcoming' ? 'upcoming' : 'completed';
+  const overview = event.overview || event.description || 'More details for this event will be shared soon.';
+  const location = event.location || 'GL Bajaj Group of Institutions, Mathura';
+  const hasTopics = Array.isArray(event.topics) && event.topics.length > 0;
+
+  const tabItems = [
+    { id: 'overview', label: 'Overview', show: true },
+    { id: 'topics', label: 'Topics Covered', show: hasTopics },
+    { id: 'volunteers', label: 'Contributors', show: (event.volunteers?.length > 0 || event.acknowledgements?.length > 0 || event.videoPresenter?.length > 0 || event.anchor) },
+    { id: 'media', label: 'Media', show: true },
+  ].filter(t => t.show);
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '48px' }}>
 
-      
       <div style={{
         position: 'relative', overflow: 'hidden',
         background: `linear-gradient(160deg, rgba(${rgb},0.12) 0%, rgba(${rgb},0.03) 50%, transparent 100%)`,
@@ -306,14 +317,15 @@ export default function EventDetailPage({ event, activityColor, activityIcon, on
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '28px', marginTop: '12px' }}>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><DynamicIcon name="Calendar" size={14} /> {event.dateText ?? event.date}</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><DynamicIcon name="MapPin" size={14} /> GL Bajaj Group of Institutions, Mathura</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><DynamicIcon name="MapPin" size={14} /> {location}</span>
               <span style={{
                 fontSize: '0.72rem', padding: '3px 12px', borderRadius: '20px',
-                background: 'rgba(34,197,94,0.12)', color: '#22c55e',
-                border: '1px solid rgba(34,197,94,0.3)', fontWeight: 700,
+                background: status === 'completed' ? 'rgba(34,197,94,0.12)' : 'rgba(0,212,255,0.12)',
+                color: status === 'completed' ? '#22c55e' : 'var(--c1)',
+                border: status === 'completed' ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(0,212,255,0.3)', fontWeight: 700,
                 textTransform: 'uppercase', letterSpacing: '0.05em',
                 display: 'flex', alignItems: 'center', gap: '4px'
-              }}><DynamicIcon name="CheckCircle" size={12} /> Completed</span>
+              }}><DynamicIcon name={status === 'completed' ? 'CheckCircle' : 'Calendar'} size={12} /> {status === 'completed' ? 'Completed' : 'Upcoming'}</span>
             </div>
 
             
@@ -325,153 +337,209 @@ export default function EventDetailPage({ event, activityColor, activityIcon, on
       </div>
 
       
-      <div className="container" style={{ paddingTop: '52px' }}>
-        <div style={{ maxWidth: '820px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '48px' }}>
-
-          
-          <section>
-            <SectionHeader icon="ClipboardList" title="Session Overview" color={color} />
-            <div style={{
-              background: 'var(--bg-card)', borderLeft: `3px solid ${color}`,
-              borderRadius: '0 12px 12px 0', padding: '28px 32px',
-              border: `1px solid rgba(${rgb},0.15)`, borderLeftWidth: '3px',
-              position: 'relative', overflow: 'hidden',
-            }}>
-              <div style={{
-                position: 'absolute', top: 0, right: 0, width: '150px', height: '150px',
-                background: `radial-gradient(circle, rgba(${rgb},0.07), transparent)`,
-                pointerEvents: 'none',
-              }} />
-              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.85, fontSize: '0.98rem', margin: 0, whiteSpace: 'pre-line' }}>
-                <Typewriter text={event.overview} speed={6} />
-              </p>
-            </div>
-          </section>
-
-          
-          <section>
-            <SectionHeader icon="Mic2" title="Presenters" color={color} />
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              {event.topics?.map((t, i) => (
-                <PersonChip key={i} name={t.speaker} role="Presenter" color={color} icon="Code2" />
-              ))}
-            </div>
-          </section>
-
-          
-          <section>
-            <SectionHeader icon="Target" title="Topics Covered" color={color} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {event.topics?.map((t, i) => <TopicCard key={i} topic={t} index={i} color={color} />)}
-            </div>
-          </section>
-
-          
-          {(event.videoPresenter?.length > 0 || event.anchor) && (
-            <section>
-              <SectionHeader icon="Clapperboard" title="Video Presentors & Anchor" color={color} />
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                {event.videoPresenter?.map((p, i) => (
-                  <PersonChip key={i} name={p.name} role={p.role} color={color} icon="Video" />
-                ))}
-                {event.anchor && (
-                  <PersonChip name={event.anchor.name} role={event.anchor.role} color={color} icon="Mic2" />
-                )}
-              </div>
-            </section>
-          )}
-
-          
-          {event.volunteers?.length > 0 && (
-            <section>
-              <SectionHeader icon="Zap" title="Volunteers — The Unsung Heroes" color={color} />
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                {event.volunteers.map((v, i) => (
-                  <PersonChip key={i} name={v.name} role="Volunteer" color={color} icon="Zap" />
-                ))}
-              </div>
-            </section>
-          )}
-
-          
-          {event.acknowledgements?.length > 0 && (
-            <section>
-              <SectionHeader icon="Heart" title="Special Thanks" color={color} />
-              <div style={{ display: 'grid', gap: '14px', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-                {event.acknowledgements.map((a, i) => <AckCard key={i} ack={a} color={color} />)}
-              </div>
-            </section>
-          )}
-
-          
-          <section>
-            <SectionHeader icon="Camera" title="Photos & Videos" color={color} />
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <MediaBtn href={event.photoLink} icon="Camera" label="View Photos" color={color} />
-              <MediaBtn href={event.videoLink} icon="Video" label="Watch Recording" color={color} />
-            </div>
-            {!event.photoLink && !event.videoLink && (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '12px', fontStyle: 'italic' }}>
-                Add links in <code style={{ color }}>src/data/activityPagesData.js</code> → KSS #153 → <code style={{ color }}>photoLink</code> / <code style={{ color }}>videoLink</code>
-              </p>
-            )}
-          </section>
-
-          
-          {event.closingNote && (
-            <section>
-              <div style={{
-                background: `linear-gradient(135deg, rgba(${rgb},0.08), rgba(${rgb},0.03))`,
-                border: `1px solid rgba(${rgb},0.25)`,
-                borderRadius: '16px', padding: '28px 32px', textAlign: 'center',
-                position: 'relative', overflow: 'hidden',
-              }}>
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  backgroundImage: `radial-gradient(rgba(${rgb},0.08) 1px, transparent 1px)`,
-                  backgroundSize: '20px 20px', pointerEvents: 'none',
-                }} />
-                <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}><DynamicIcon name="Rocket" size={32} /></div>
-                <p style={{
-                  fontFamily: 'Rajdhani,sans-serif', fontSize: '1.1rem', fontWeight: 600,
-                  color: 'var(--text-primary)', lineHeight: 1.7, margin: '0 0 16px',
-                  position: 'relative',
-                }}>
-                  {event.closingNote}
-                </p>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, fontStyle: 'italic' }}>
-                  Stay tuned. Stay curious. The best is yet to come. <DynamicIcon name="Star" size={12} style={{ verticalAlign: 'middle' }} />
-                </p>
-              </div>
-            </section>
-          )}
-
-          
-          {event.hashtags?.length > 0 && (
-            <section>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {event.hashtags.map(tag => (
-                  <span key={tag} style={{
-                    fontSize: '0.78rem', padding: '4px 12px', borderRadius: '20px',
-                    background: `rgba(${rgb},0.08)`, color,
-                    border: `1px solid rgba(${rgb},0.2)`,
-                    fontFamily: 'Rajdhani,sans-serif', fontWeight: 600,
-                    letterSpacing: '0.03em', cursor: 'default',
-                    transition: 'all 0.2s',
-                  }}
-                    onMouseEnter={e => { e.target.style.background = `rgba(${rgb},0.18)`; e.target.style.transform = 'translateY(-2px)'; }}
-                    onMouseLeave={e => { e.target.style.background = `rgba(${rgb},0.08)`; e.target.style.transform = ''; }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
-
+      <div className="container" style={{ paddingTop: '32px' }}>
+        
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          borderBottom: `1px solid var(--border-subtle)`,
+          paddingBottom: '12px',
+          marginBottom: '32px',
+          maxWidth: '820px',
+          margin: '0 auto 32px',
+          flexWrap: 'wrap',
+        }}>
+          {tabItems.map(tab => {
+            const isActive = activeSubTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSubTab(tab.id)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '30px',
+                  border: `1px solid ${isActive ? color : 'var(--border-subtle)'}`,
+                  background: isActive ? `rgba(${rgb},0.1)` : 'transparent',
+                  color: isActive ? color : 'var(--text-muted)',
+                  fontFamily: 'Orbitron,monospace',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.target.style.borderColor = `rgba(${rgb},0.5)`;
+                    e.target.style.color = 'var(--text-primary)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.target.style.borderColor = 'var(--border-subtle)';
+                    e.target.style.color = 'var(--text-muted)';
+                  }
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
+
+        <div style={{ maxWidth: '820px', margin: '0 auto' }}>
+          {activeSubTab === 'overview' && (
+            <div className="pop-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              <section>
+                <SectionHeader icon="ClipboardList" title="Session Overview" color={color} />
+                <div style={{
+                  background: 'var(--bg-card)', borderLeft: `3px solid ${color}`,
+                  borderRadius: '0 12px 12px 0', padding: '28px 32px',
+                  border: `1px solid rgba(${rgb},0.15)`, borderLeftWidth: '3px',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: 0, right: 0, width: '150px', height: '150px',
+                    background: `radial-gradient(circle, rgba(${rgb},0.07), transparent)`,
+                    pointerEvents: 'none',
+                  }} />
+                  <p style={{ color: 'var(--text-secondary)', lineHeight: 1.85, fontSize: '0.98rem', margin: 0, whiteSpace: 'pre-line' }}>
+                    <Typewriter text={overview} speed={6} />
+                  </p>
+                </div>
+              </section>
+
+              {hasTopics && (
+                <section>
+                  <SectionHeader icon="Mic2" title="Presenters" color={color} />
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    {event.topics?.map((t, i) => (
+                      <PersonChip key={i} name={t.speaker} role="Presenter" color={color} icon="Code2" />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {event.closingNote && (
+                <section>
+                  <blockquote style={{
+                    background: `linear-gradient(135deg, rgba(${rgb},0.08), rgba(${rgb},0.03))`,
+                    border: `1px solid rgba(${rgb},0.25)`,
+                    borderLeft: `5px solid ${color}`,
+                    borderRadius: '12px', padding: '28px 32px', textAlign: 'left',
+                    position: 'relative', overflow: 'hidden',
+                    margin: 0,
+                  }}>
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      backgroundImage: `radial-gradient(rgba(${rgb},0.08) 1px, transparent 1px)`,
+                      backgroundSize: '20px 20px', pointerEvents: 'none',
+                    }} />
+                    <p style={{
+                      fontFamily: 'Rajdhani,sans-serif', fontSize: '1.12rem', fontWeight: 600,
+                      color: 'var(--text-primary)', lineHeight: 1.7, margin: '0 0 12px',
+                      position: 'relative', fontStyle: 'italic',
+                    }}>
+                      "{event.closingNote}"
+                    </p>
+                    <cite style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', fontStyle: 'normal', fontWeight: 500 }}>
+                      — NexaSphere Team · Stay tuned. Stay curious. <DynamicIcon name="Rocket" size={12} style={{ verticalAlign: 'middle', marginLeft: '4px' }} />
+                    </cite>
+                  </blockquote>
+                </section>
+              )}
+
+              {event.hashtags?.length > 0 && (
+                <section>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {event.hashtags.map(tag => (
+                      <span key={tag} style={{
+                        fontSize: '0.78rem', padding: '4px 12px', borderRadius: '20px',
+                        background: `rgba(${rgb},0.08)`, color,
+                        border: `1px solid rgba(${rgb},0.25)`,
+                        fontFamily: 'Rajdhani,sans-serif', fontWeight: 600,
+                        letterSpacing: '0.03em', cursor: 'default',
+                        transition: 'all 0.2s',
+                      }}
+                        onMouseEnter={e => { e.target.style.background = `rgba(${rgb},0.18)`; e.target.style.transform = 'translateY(-2px)'; }}
+                        onMouseLeave={e => { e.target.style.background = `rgba(${rgb},0.08)`; e.target.style.transform = ''; }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+
+          {activeSubTab === 'topics' && hasTopics && (
+            <div className="pop-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              <section>
+                <SectionHeader icon="Target" title="Topics Covered" color={color} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {event.topics?.map((t, i) => <TopicCard key={i} topic={t} index={i} color={color} />)}
+                </div>
+              </section>
+            </div>
+          )}
+
+          {activeSubTab === 'volunteers' && (
+            <div className="pop-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              {(event.videoPresenter?.length > 0 || event.anchor) && (
+                <section>
+                  <SectionHeader icon="Clapperboard" title="Video Presenters & Anchor" color={color} />
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    {event.videoPresenter?.map((p, i) => (
+                      <PersonChip key={i} name={p.name} role={p.role} color={color} icon="Video" />
+                    ))}
+                    {event.anchor && (
+                      <PersonChip name={event.anchor.name} role={event.anchor.role} color={color} icon="Mic2" />
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {event.volunteers?.length > 0 && (
+                <section>
+                  <SectionHeader icon="Zap" title="Volunteers — The Unsung Heroes" color={color} />
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    {event.volunteers.map((v, i) => (
+                      <PersonChip key={i} name={v.name} role="Volunteer" color={color} icon="Zap" />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {event.acknowledgements?.length > 0 && (
+                <section>
+                  <SectionHeader icon="Heart" title="Special Thanks" color={color} />
+                  <div style={{ display: 'grid', gap: '14px', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+                    {event.acknowledgements.map((a, i) => <AckCard key={i} ack={a} color={color} />)}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+
+          {activeSubTab === 'media' && (
+            <div className="pop-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              <section>
+                <SectionHeader icon="Camera" title="Photos & Videos" color={color} />
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                  <MediaBtn href={event.photoLink} icon="Camera" label="View Photos" color={color} />
+                  <MediaBtn href={event.videoLink} icon="Video" label="Watch Recording" color={color} />
+                </div>
+                {!event.photoLink && !event.videoLink && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '12px', fontStyle: 'italic' }}>
+                    Photos and recordings are not available for this event yet.
+                  </p>
+                )}
+              </section>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
 }
-

@@ -134,6 +134,10 @@ export default function CinematicOpening({ onDone, theme = 'dark' }) {
     onDone();
   }, [onDone]);
 
+  // --- INTENTIONAL ALWAYS REPLAY BEHAVIOR ---
+  // NexaSphere intentionally replays the opening cinematic entrance animation on every full page load.
+  // This is a premium design signature to wow users with custom SVG/CSS shatter effects.
+  // There is no localStorage bypass check here by design.
   useEffect(() => {
     const ts = [];
     ts.push(setTimeout(() => setPhase(1), 280));
@@ -149,6 +153,15 @@ export default function CinematicOpening({ onDone, theme = 'dark' }) {
     ts.push(setTimeout(() => setCracking(true), 2500));
     ts.push(setTimeout(() => setShatter(true),  2640));
     ts.push(setTimeout(() => { setGone(true); onDone(); }, 3380));
+
+    // ~5.5s Backup Timeout Fallback Gate
+    // If the animation glitches, runs slow, or races with the DOM, this ensures the screen never remains blank.
+    ts.push(setTimeout(() => {
+      console.warn('[CinematicOpening] Animation backup fallback triggered. Releasing paint gate.');
+      setGone(true);
+      onDone();
+    }, 5500));
+
     timersRef.current = ts;
     return () => { ts.forEach(t => clearTimeout(t)); clearInterval(ivRef.current); };
   }, []);

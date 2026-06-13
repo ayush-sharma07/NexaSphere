@@ -3,26 +3,26 @@
  * Handles all frontend error logging and monitoring
  */
 
-import * as Sentry from "@sentry/react";
+import * as Sentry from '@sentry/react';
 
 /**
  * Initialize Sentry for frontend error tracking
  * @param {string} environment - Environment (development, staging, production)
  */
-export const initializeSentry = (environment = process.env.NODE_ENV) => {
-  const isDevelopment = environment === "development";
+export const initializeSentry = (environment = import.meta.env.MODE) => {
+  const isDevelopment = import.meta.env.DEV;
 
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN || process.env.SENTRY_DSN,
+    dsn: import.meta.env.VITE_SENTRY_DSN,
     environment: environment,
     tracesSampleRate: isDevelopment ? 1.0 : 0.1, // 100% in dev, 10% in prod
     profilesSampleRate: isDevelopment ? 1.0 : 0.1,
     integrations: [
-      new Sentry.Replay({
+      Sentry.replayIntegration({
         maskAllText: true,
         blockAllMedia: true,
       }),
-      new Sentry.BrowserTracing(),
+      Sentry.browserTracingIntegration(),
     ],
     denyUrls: [
       // Browser extensions
@@ -43,15 +43,15 @@ export const initializeSentry = (environment = process.env.NODE_ENV) => {
 export const captureApiError = (error, context = {}) => {
   Sentry.captureException(error, {
     tags: {
-      type: "api_error",
+      type: 'api_error',
       ...context,
     },
-    level: context.severity || "error",
+    level: context.severity || 'error',
   });
 
   // Also log to console in development
-  if (process.env.NODE_ENV === "development") {
-    console.error("API Error:", error, context);
+  if (import.meta.env.DEV) {
+    console.error('API Error:', error, context);
   }
 };
 
@@ -62,16 +62,19 @@ export const captureApiError = (error, context = {}) => {
  * @param {Object} metadata - Additional metadata
  */
 export const capturePerformanceMetric = (action, duration, metadata = {}) => {
-  const transaction = Sentry.startTransaction({
-    name: action,
-    op: action,
-  });
-
-  setTimeout(() => {
-    transaction.setTag("duration", duration);
-    transaction.setData("metadata", metadata);
-    transaction.finish();
-  }, duration);
+  Sentry.startSpanManual(
+    {
+      name: action,
+      op: action,
+    },
+    (span) => {
+      setTimeout(() => {
+        span.setAttribute('duration', duration);
+        span.setAttribute('metadata', JSON.stringify(metadata));
+        span.end();
+      }, duration);
+    }
+  );
 };
 
 /**
@@ -96,8 +99,7 @@ export const setUserContext = (user) => {
  * @param {string} category - Category (e.g., "navigation", "action")
  * @param {string} level - Level (info, warning, error)
  */
-export const addBreadcrumb = (message, category = "user-action", level = "info") => {
-  Sentry.captureMessage(message, level);
+export const addBreadcrumb = (message, category = 'user-action', level = 'info') => {
   Sentry.addBreadcrumb({
     message,
     category,
@@ -111,13 +113,13 @@ export const addBreadcrumb = (message, category = "user-action", level = "info")
  * @param {Error} error - The error to capture
  * @param {string} context - Context information
  */
-export const captureHandledException = (error, context = "") => {
+export const captureHandledException = (error, context = '') => {
   Sentry.captureException(error, {
     tags: {
       handled: true,
       context,
     },
-    level: "warning",
+    level: 'warning',
   });
 };
 

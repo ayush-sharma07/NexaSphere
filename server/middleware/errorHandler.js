@@ -3,9 +3,11 @@
  * Handles all errors in a centralized location
  */
 
-const logger = require("./logger");
-const { captureException } = require("./sentry");
-const { sendSlackAlert } = require("./slack");
+import logger from "../utils/logger.js";
+import { captureException } from "../utils/sentry.js";
+import { sendSlackAlert } from "../utils/slack.js";
+import { ZodError } from "zod";
+import { ValidationError } from "../utils/errors.js";
 
 /**
  * Main error handler middleware
@@ -15,6 +17,42 @@ const { sendSlackAlert } = require("./slack");
  * @param {Function} next - Express next
  */
 const errorHandler = (err, req, res, next) => {
+  // Handle ZodError
+  if (err instanceof ZodError) {
+    const formattedErrors = err.issues.map((issue) => ({
+      field: issue.path.join('.'),
+      message: issue.message,
+      value: issue.value,
+    }));
+
+    logger.warn("Validation Error (Zod)", { errors: formattedErrors });
+
+    return res.status(400).json({
+      success: false,
+      error: {
+        status: 400,
+        message: "Validation failed",
+        errors: formattedErrors,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Handle custom ValidationError
+  if (err instanceof ValidationError) {
+    logger.warn("Validation Error", { message: err.message, errors: err.details });
+
+    return res.status(400).json({
+      success: false,
+      error: {
+        status: 400,
+        message: err.message,
+        errors: err.details,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   // Determine error status code
   const status = err.statusCode || err.status || 500;
   const message = err.message || "Internal Server Error";
@@ -123,7 +161,7 @@ const asyncHandler = (fn) => (req, res, next) => {
   });
 };
 
-module.exports = {
+export {
   errorHandler,
   notFoundHandler,
   validationErrorHandler,

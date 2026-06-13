@@ -7,6 +7,7 @@ export const events = [
     id: 1,
     name: 'KSS #153 — Knowledge Sharing Session',
     shortName: 'KSS #153',
+    hasDetailPage: true,
     date: 'March 14, 2025',
     startDate: '2025-03-14T10:00:00',
     endDate: '2025-03-14T12:00:00',
@@ -28,7 +29,7 @@ export const events = [
     endDate: '2026-04-24T17:00:00',
     description:
       'Version control mastery for every developer. Learn Git from scratch and start contributing to real projects like a pro.',
-    status: 'upcoming',
+    status: 'completed',
     icon: 'Wrench',
     category: 'workshop',
     tags: ['Git', 'GitHub', 'Workshop'],

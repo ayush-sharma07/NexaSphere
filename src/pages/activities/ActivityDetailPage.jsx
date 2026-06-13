@@ -107,7 +107,7 @@ function ScanLine({ color }) {
   );
 }
 
-function EventCard({ event, activityColor, onSelect, onDelete }) {
+function EventCard({ event, activityColor, onSelect }) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -142,13 +142,6 @@ function EventCard({ event, activityColor, onSelect, onDelete }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div style={{ flex: 1 }}>
-          <button
-            className="btn btn-outline btn-sm"
-            onClick={(e) => { e.stopPropagation(); onDelete && onDelete(event.id); }}
-            style={{ marginBottom: '8px' }}
-          >
-            Delete this event
-          </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
             <h3 style={{
               fontFamily: 'Orbitron, monospace', fontSize: '0.95rem', fontWeight: 700,
@@ -183,13 +176,6 @@ function EventCard({ event, activityColor, onSelect, onDelete }) {
               ))}
             </div>
           )}
-          <button
-            className="btn btn-outline btn-sm"
-            onClick={(e) => { e.stopPropagation(); onDelete && onDelete(event.id); }}
-            style={{ marginTop: '12px' }}
-          >
-            Delete this event
-          </button>
         </div>
         <div style={{
           color: activityColor, fontSize: '1.4rem', flexShrink: 0,
@@ -241,14 +227,16 @@ function hexToRgb(hex) {
 
 export default function ActivityDetailPage({ activity, onBack, onSelectEvent }) {
   const [mounted, setMounted] = useState(false);
-  const [conductedEvents, setConductedEvents] = useState([]);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [conductedEvents, setConductedEvents] = useState(activity.conductedEvents || []);
+  const [upcomingEvents, setUpcomingEvents] = useState(activity.upcomingEvents || []);
+  const [loading, setLoading] = useState(true);
   
   const apiBase = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
   const activityKey = encodeURIComponent(activity.title);
 
   const fetchEvents = async () => {
     const url = apiBase ? `${apiBase}/api/content/activity-events/${activityKey}` : `/api/content/activity-events/${activityKey}`;
+    setLoading(true);
     try {
       const res = await fetch(url);
       const data = await res.json().catch(() => ({}));
@@ -257,11 +245,18 @@ export default function ActivityDetailPage({ activity, onBack, onSelectEvent }) 
         const conducted = events.filter(e => e.status === 'completed' || e.status === 'conducted');
         const upcoming = events.filter(e => e.status === 'upcoming');
         
-        setConductedEvents(conducted);
-        setUpcomingEvents(upcoming);
+        setConductedEvents(conducted.length > 0 ? conducted : (activity.conductedEvents || []));
+        setUpcomingEvents(upcoming.length > 0 ? upcoming : (activity.upcomingEvents || []));
+      } else {
+        setConductedEvents(activity.conductedEvents || []);
+        setUpcomingEvents(activity.upcomingEvents || []);
       }
     } catch (e) {
-      console.warn('Failed to fetch dynamic activity events', e);
+      console.warn('Failed to fetch dynamic activity events, falling back to static data', e);
+      setConductedEvents(activity.conductedEvents || []);
+      setUpcomingEvents(activity.upcomingEvents || []);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -269,13 +264,24 @@ export default function ActivityDetailPage({ activity, onBack, onSelectEvent }) 
     window.scrollTo({ top: 0 });
     setTimeout(() => setMounted(true), 50);
     fetchEvents();
+
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('fired');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -10px 0px' });
+    document.querySelectorAll('#activity-detail-page .pop-in, #activity-detail-page .pop-left, #activity-detail-page .pop-right, #activity-detail-page .pop-word').forEach(el => obs.observe(el));
+    return () => obs.disconnect();
   }, [activity.title]);
 
   const color = activity.color || 'var(--cyan)';
   const rgb = color.startsWith('#') ? hexToRgb(color) : '0,212,255';
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '100px', overflow: 'hidden' }}>
+    <div id="activity-detail-page" style={{ minHeight: '100vh', paddingBottom: '100px', overflow: 'hidden' }}>
 
       
       <div style={{
@@ -299,7 +305,7 @@ export default function ActivityDetailPage({ activity, onBack, onSelectEvent }) 
               fontSize: '0.85rem', cursor: 'pointer', marginBottom: '36px',
               transition: 'all 0.2s', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600,
             }}
-            onMouseEnter={e => { e.target.style.background = `rgba(${rgb},0.1)`; e.target.style.transform = 'translateX(-4px)'; }}
+            onMouseEnter={e => { e.target.style.background = `rgba(${rgb},0.15)`; e.target.style.transform = 'translateX(-4px)'; }}
             onMouseLeave={e => { e.target.style.background = 'none'; e.target.style.transform = ''; }}
           >
             ← Back to Activities
@@ -353,11 +359,20 @@ export default function ActivityDetailPage({ activity, onBack, onSelectEvent }) 
       </div>
 
       
-      <div className="container" style={{ paddingTop: '56px' }}>
+      <div className="container" style={{ paddingTop: '32px' }}>
 
-        
-        {conductedEvents.length > 0 && (
-          <div style={{ marginBottom: '56px' }}>
+        {loading && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '50%',
+              border: `2.5px dashed rgba(${rgb},0.3)`, borderTopColor: color,
+              animation: 'animate-spin 1s linear infinite'
+            }} />
+          </div>
+        )}
+
+        {!loading && conductedEvents.length > 0 && (
+          <div style={{ marginBottom: '56px' }} className="pop-in">
             <h2 style={{
               fontFamily: 'Orbitron, monospace', fontSize: '1.1rem', fontWeight: 700,
               color, marginBottom: '24px', letterSpacing: '0.08em',
@@ -383,9 +398,8 @@ export default function ActivityDetailPage({ activity, onBack, onSelectEvent }) 
           </div>
         )}
 
-        
-        {upcomingEvents.length > 0 && (
-          <div style={{ maxWidth: '760px' }}>
+        {!loading && upcomingEvents.length > 0 && (
+          <div style={{ maxWidth: '760px' }} className="pop-in">
             <h2 style={{
               fontFamily: 'Orbitron, monospace', fontSize: '1.1rem', fontWeight: 700,
               color, marginBottom: '24px', letterSpacing: '0.08em',
@@ -406,9 +420,8 @@ export default function ActivityDetailPage({ activity, onBack, onSelectEvent }) 
           </div>
         )}
 
-        
-        {conductedEvents.length === 0 && upcomingEvents.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '80px 0' }}>
+        {!loading && conductedEvents.length === 0 && upcomingEvents.length === 0 && (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '80px 0' }} className="pop-in">
             <div style={{ fontSize: '4rem', marginBottom: '16px' }}>{activity.icon}</div>
             <p>Events coming soon. Watch this space!</p>
           </div>

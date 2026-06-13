@@ -2,8 +2,7 @@ import { supabaseRequest, HAS_SUPABASE } from '../storage/supabaseClient.js';
 import { readContent, writeContent } from '../storage/contentFileStore.js';
 import { sanitizeCoreTeamMemberRecord } from '../utils/sanitize.js';
 import crypto from 'crypto';
-import { coreTeamRepository } from '../repositories/coreTeamRepository.js';
-import { normalizeCoreTeamGate } from '../validators/coreTeamSchemas.js';
+import { coreTeamMemberSchema, normalizeCoreTeamGate } from '../schemas/coreTeamMemberSchema.js';
 import { UnauthorizedError } from '../utils/errors.js';
 
 const fallbackMembers = [
@@ -106,7 +105,14 @@ export const coreTeamService = {
 
   async assertCanManageActivityEvent(body) {
     const gate = normalizeCoreTeamGate(body);
-    const expectedPassword = process.env.ADMIN_EVENT_PASSWORD || 'Admin@123';
+    if (!gate.name || !gate.email || !gate.phone || !gate.password) {
+      throw new UnauthorizedError('Unauthorized. Missing admin gate fields.');
+    }
+
+    const expectedPassword = process.env.ADMIN_EVENT_PASSWORD;
+    if (!expectedPassword) {
+      throw new UnauthorizedError('Unauthorized. Admin event password is not configured on the server.');
+    }
     if (gate.password !== expectedPassword) {
       throw new UnauthorizedError('Unauthorized. Core team details or password did not match.');
     }

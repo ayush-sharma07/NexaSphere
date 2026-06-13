@@ -1,12 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useLayoutEffect } from 'react';
 
 export default function PageIn({ children, k }) {
   const [r, setR] = useState(false);
-  useEffect(() => {
+
+  useLayoutEffect(() => {
     setR(false);
-    const t = setTimeout(() => setR(true), 10);
-    return () => clearTimeout(t);
+    let rAF1, rAF2;
+    // Double requestAnimationFrame guarantees layout is painted before transitioning class state
+    rAF1 = requestAnimationFrame(() => {
+      rAF2 = requestAnimationFrame(() => {
+        setR(true);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(rAF1);
+      cancelAnimationFrame(rAF2);
+    };
   }, [k]);
+
   return (
     <div style={{
       opacity: r ? 1 : 0,

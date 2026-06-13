@@ -2,7 +2,8 @@ import React from 'react';
 import {
   ArrowUp, ArrowRight, ArrowLeft, Activity, Code2, Lightbulb, Code, BarChart3, Brain, Wrench,
   ChevronRight, Flame, Crown, Mail, MapPin, Phone, Users, Calendar, BookOpen,
-  Target, Zap, Cpu, Share2, Home, Settings, Menu, X, Search, AlertCircle, CheckCircle, AlertTriangle, Rocket, Pin, Mic2, Timer, Heart, Star, ExternalLink, Globe, Cloud, Smartphone, Megaphone, Briefcase, Link
+  Target, Zap, Cpu, Share2, Home, Settings, Menu, X, Search, AlertCircle, CheckCircle, AlertTriangle, Rocket, Pin, Mic2, Timer, Heart, Star, ExternalLink, Globe, Cloud, Smartphone, Megaphone, Briefcase, Link,
+  Trophy, Palette, MessageCircle, FileText, Clipboard, List, Sparkles
 } from 'lucide-react';
 
 function baseProps(props) {
@@ -119,6 +120,13 @@ export const ICON_MAP = {
   Megaphone,
   Briefcase,
   Link,
+  Trophy,
+  Palette,
+  MessageCircle,
+  FileText,
+  Clipboard,
+  List,
+  Sparkles,
   ShieldCheck: IconShieldCheck,
   Bolt: IconBolt,
   Spark: IconSpark
@@ -128,6 +136,9 @@ export const ICON_MAP = {
 export function DynamicIcon({ name, size = 24, ...props }) {
   const IconComponent = ICON_MAP[name];
   if (!IconComponent) {
+    if (typeof name === 'string' && (name.match(/[\uD800-\uDFFF]/) || name.length <= 2)) {
+      return <span style={{ fontSize: `${size}px`, display: 'inline-block', lineHeight: 1 }} {...props}>{name}</span>;
+    }
     console.warn(`Icon "${name}" not found in ICON_MAP`);
     return null; // Ensure no text is returned
   }

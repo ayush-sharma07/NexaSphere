@@ -1,22 +1,36 @@
 import { useState, useEffect } from 'react';
+import { Skeleton } from '../../components/Skeleton';
 import { events as fallbackEvents } from '../../data/eventsData';
 import { BannerOrbs } from '../../shared/MotionLayer';
 import Footer from '../../shared/Footer';
 import { DynamicIcon } from '../../shared/Icons';
 import PersonalizedFeed from '../../components/recommendation/PersonalizedFeed';
 import EventCalendarView from '../../components/calendar/EventCalendarView';
+import SchedulingAssistant from '../../components/scheduling/SchedulingAssistant';
+import useIntersectionObserver from '../../hooks/useIntersectionObserver';
 
 export default function EventsPage({ onBack, onEventClick, events = fallbackEvents }) {
   const [view, setView] = useState('timeline');
   const [recommendationView, setRecommendationView] = useState(false);
+  const [scheduleView, setScheduleView] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+useEffect(() => {
+  const t = setTimeout(() => setIsLoading(false), 1200);
+  return () => clearTimeout(t);
+}, []);
+
+  const sortedEvents = [...events].sort((a, b) => {
+    return new Date(a.date) - new Date(b.date);
+  });
+
+  useIntersectionObserver(
+    '#events-page .pop-in, #events-page .pop-left, #events-page .pop-right, #events-page .pop-word',
+    'fired',
+    { threshold: 0, rootMargin: '0px 0px -10px 0px' }
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('fired'); obs.unobserve(e.target); } });
-    }, { threshold: 0, rootMargin: '0px 0px -10px 0px' });
-    document.querySelectorAll('#events-page .pop-in, #events-page .pop-left, #events-page .pop-right, #events-page .pop-word').forEach(el => obs.observe(el));
-    return () => obs.disconnect();
   }, []);
 
   return (
@@ -61,16 +75,17 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
             onClick={() => {
               setView('timeline');
               setRecommendationView(false);
+              setScheduleView(false);
             }}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               padding: '8px 20px',
-              background: !recommendationView && view === 'timeline' ? 'var(--c1)' : 'transparent',
-              border: !recommendationView && view === 'timeline' ? 'none' : '1px solid var(--bdr)',
+              background: !recommendationView && !scheduleView && view === 'timeline' ? 'var(--c1)' : 'transparent',
+              border: !recommendationView && !scheduleView && view === 'timeline' ? 'none' : '1px solid var(--bdr)',
               borderRadius: '100px',
-              color: !recommendationView && view === 'timeline' ? 'white' : 'var(--t2)',
+              color: !recommendationView && !scheduleView && view === 'timeline' ? 'white' : 'var(--t2)',
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: 500,
@@ -85,16 +100,17 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
             onClick={() => {
               setView('calendar');
               setRecommendationView(false);
+              setScheduleView(false);
             }}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               padding: '8px 20px',
-              background: !recommendationView && view === 'calendar' ? 'var(--c1)' : 'transparent',
-              border: !recommendationView && view === 'calendar' ? 'none' : '1px solid var(--bdr)',
+              background: !recommendationView && !scheduleView && view === 'calendar' ? 'var(--c1)' : 'transparent',
+              border: !recommendationView && !scheduleView && view === 'calendar' ? 'none' : '1px solid var(--bdr)',
               borderRadius: '100px',
-              color: !recommendationView && view === 'calendar' ? 'white' : 'var(--t2)',
+              color: !recommendationView && !scheduleView && view === 'calendar' ? 'white' : 'var(--t2)',
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: 500,
@@ -109,6 +125,7 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
             onClick={() => {
               setRecommendationView(true);
               setView('timeline');
+              setScheduleView(false);
             }}
             style={{
               display: 'flex',
@@ -129,33 +146,73 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
             <DynamicIcon name="Sparkles" size={16} />
             For You
           </button>
+          <button
+            onClick={() => {
+              setScheduleView(true);
+              setView('timeline');
+              setRecommendationView(false);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 20px',
+              background: scheduleView ? 'var(--c1)' : 'transparent',
+              border: scheduleView ? 'none' : '1px solid var(--bdr)',
+              borderRadius: '100px',
+              color: scheduleView ? 'white' : 'var(--t2)',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 500,
+              transition: 'all 0.2s ease',
+              fontFamily: "'Rajdhani', sans-serif"
+            }}
+          >
+            <DynamicIcon name="Zap" size={16} />
+            Smart Schedule
+          </button>
         </div>
       </div>
 
       <div className="container">
-        {recommendationView ? (
-          <PersonalizedFeed events={events} onEventClick={onEventClick} />
+        {scheduleView ? (
+          <SchedulingAssistant events={events} onEventClick={onEventClick} />
+        ) : recommendationView ? (
+          <PersonalizedFeed events={sortedEvents} onEventClick={onEventClick} />
         ) : view === 'timeline' ? (
           <div className="events-timeline ns-reveal">
-            {events.map((ev, i) => {
-              const isKSS = ev.id === 1 || ev.id === 'kss-153' || String(ev.shortName || '').toLowerCase().includes('kss');
+            {isLoading
+              ? Array.from({ length: 5 }).map((_, i) => (
+                <div className="timeline-item" key={i}>
+                  <div className="timeline-dot" />
+                  <div className="timeline-card" style={{ width: '100%' }}>
+                    <Skeleton height={22} width="60%" borderRadius={8} />
+                    <Skeleton height={14} width="35%" borderRadius={6} />
+                    <Skeleton height={48} width="100%" borderRadius={8} />
+                    <Skeleton height={24} width="40%" borderRadius={20} />
+                  </div>
+                </div>
+              
+                ))
+          : sortedEvents.map((ev, i) => {
+              const hasDetailPage = !!ev.hasDetailPage;
               return (
                 <div className="timeline-item" key={ev.id}>
                   <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
                   <div
-                    className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
+                    className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'}`}
                     style={{
                       animationDelay: `${i * .11}s`,
-                      cursor: isKSS ? 'pointer' : 'default',
+                      cursor: hasDetailPage ? 'pointer' : 'default',
                       transition: 'all .28s ease',
                     }}
-                    onClick={isKSS ? () => onEventClick(ev) : undefined}
-                    onMouseEnter={isKSS ? e => {
+                    onClick={hasDetailPage ? () => onEventClick?.(ev) : undefined}
+                    onMouseEnter={hasDetailPage ? e => {
                       e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
                       e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
                       e.currentTarget.style.transform = 'translateY(-4px)';
                     } : undefined}
-                    onMouseLeave={isKSS ? e => {
+                    onMouseLeave={hasDetailPage ? e => {
                       e.currentTarget.style.borderColor = '';
                       e.currentTarget.style.boxShadow = '';
                       e.currentTarget.style.transform = '';
@@ -163,18 +220,19 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
                       <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
-                      <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>
-                      {isKSS && (
+                      <div className="timeline-event-name" style={hasDetailPage ? { color: '#a855f7' } : {}}>{ev.name}</div>
+                      {hasDetailPage && (
                         <span style={{
                           marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
                           borderRadius: '10px', background: 'rgba(168,85,247,.12)',
                           color: '#a855f7', border: '1px solid rgba(168,85,247,.3)',
                           fontFamily: "'Space Mono', monospace", whiteSpace: 'nowrap',
+                          cursor: 'pointer'
                         }}>View Details →</span>
                       )}
                     </div>
                     <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <DynamicIcon name="Calendar" size={14} /> {ev.date}
+                      <DynamicIcon name="Calendar" size={14} /> {ev.dateText ?? ev.date}
                     </div>
                     <p className="timeline-event-desc">{ev.description}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
@@ -199,7 +257,7 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
 
             <div className="timeline-item">
               <div className="timeline-dot upcoming" />
-              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${events.length * .11}s` }}>
+              <div className="timeline-card pop-in" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${sortedEvents.length * .11}s` }}>
                 <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
                 <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
               </div>

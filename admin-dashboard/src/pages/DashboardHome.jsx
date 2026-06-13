@@ -29,8 +29,16 @@ export function DashboardHome() {
     });
   }, []);
 
+  const isOfflineMode = !import.meta.env.VITE_API_BASE;
+
   return (
     <div className="page">
+      {isOfflineMode && (
+        <div className="offline-warning-banner">
+          <AdminIcon name="AlertTriangle" size={18} className="warning-icon" />
+          <span>Offline Mode — connect Google Apps Script for live data</span>
+        </div>
+      )}
       <h2 className="page-title">Dashboard</h2>
       {loading ? (
         <div className="stats-grid">

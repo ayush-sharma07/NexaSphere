@@ -11,14 +11,22 @@ const links = [
   { to: '/dashboard/recruitment', label: 'Recruitment', icon: 'Users' },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isOpen, onClose }) {
   const { email, logout } = useAuth();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-brand">
-        <span className="brand-dot" />
-        <span>NexaSphere Control Center</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span className="brand-dot" />
+          <span>NexaSphere Control Center</span>
+        </div>
+        <button className="sidebar-close-btn" onClick={onClose} aria-label="Close Sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
       <nav className="sidebar-nav">
         {links.map(({ to, label, icon }) => (
@@ -27,6 +35,7 @@ export function Sidebar() {
             to={to}
             end={to === '/dashboard'}
             className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+            onClick={onClose}
           >
             <AdminIcon name={icon} size={16} />
             {label}

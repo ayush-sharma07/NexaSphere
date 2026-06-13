@@ -251,16 +251,17 @@
 [data-theme="light"] .ns-nav-tab:hover  { color:var(--t1); }
 [data-theme="light"] .ns-nav-tab.active { color:#CC1111; }
 
-.ns-navbar-mobile { position:fixed; top:0; left:0; right:0; z-index:12010; background:rgba(10,10,10,0.95); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-bottom:1px solid var(--bdr); padding:6px 0 4px; }
+.ns-navbar-mobile { position:fixed; top:0; left:0; right:0; z-index:12010; background:rgba(10,10,10,0.95); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-bottom:1px solid var(--bdr); padding:10px 0 8px; }
 [data-theme="light"] .ns-navbar-mobile {
-  background: rgba(255,255,255,.12) !important;
+  background: rgba(255,255,255,.96) !important;
   backdrop-filter: blur(40px) saturate(200%) !important;
   -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
   border-bottom: 1px solid rgba(0,0,0,.05) !important;
 }
-.ns-mobile-top { display:flex; align-items:center; justify-content:center; gap:10px; padding:0 14px 5px; }
+.ns-mobile-top { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 14px 8px; min-height:58px; }
+.ns-mobile-logo-group { display:flex; align-items:center; gap:10px; }
 .ns-mobile-logo-ns {
-  height: 55px; width: auto; object-fit: contain;
+  height: 48px; width: auto; object-fit: contain;
   mix-blend-mode: normal;
   filter: drop-shadow(0 0 8px rgba(204,17,17,.6)) brightness(1.05);
 }
@@ -268,16 +269,47 @@
   mix-blend-mode: normal;
   filter: drop-shadow(0 2px 6px rgba(204,17,17,.45));
 }
-.ns-mobile-logo-gl { height:22px; width:auto; background:rgba(255,255,255,.85); padding:2px 4px; border-radius:4px; }
-[data-theme="light"] .ns-mobile-logo-gl { background:transparent; }
-.ns-mobile-brand { font-family:'Orbitron',monospace; font-size:.8rem; font-weight:900; transition:transform .2s ease !important; }
-.ns-mobile-brand:active { transform:scale(0.95); }
+.ns-mobile-brand { font-family:'Orbitron',monospace; font-size:.85rem; font-weight:900; transition:transform .2s ease !important; }
 .ns-mobile-brand span { background:linear-gradient(135deg,var(--c1),var(--c2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-.ns-mobile-tabs { display:flex; overflow-x:auto; gap:0; padding:0 4px; scrollbar-width:none; -ms-overflow-style:none; }
-.ns-mobile-tabs::-webkit-scrollbar { display:none; }
-.ns-mobile-tab { flex-shrink:0; padding:5px 12px; font-family:'Rajdhani',sans-serif; font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--t2); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; transition:color .2s !important; white-space:nowrap; }
-.ns-mobile-tab.active { color:var(--c1); border-bottom-color:var(--c1); }
-[data-theme="light"] .ns-mobile-tab.active { color:#CC1111; border-bottom-color:#CC1111; }
+.ns-mobile-top-actions { display:flex; align-items:center; gap:8px; }
+.ns-mobile-menu-toggle {
+  width:44px; height:44px; border-radius:16px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08); color:var(--t2); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform .2s ease, background .2s ease, border-color .2s ease;
+}
+.ns-mobile-menu-toggle:hover { transform:scale(1.03); border-color:rgba(204,17,17,.45); }
+[data-theme="light"] .ns-mobile-menu-toggle { background:rgba(0,0,0,.04); border-color:rgba(0,0,0,.06); }
+.ns-mobile-drawer {
+  position:fixed; top:0; left:0; bottom:0; z-index:12020;
+  width:min(85vw, 420px); max-width:420px; height:100vh;
+  padding:calc(var(--nh) + 16px) 18px 24px;
+  background:rgba(10,10,10,.96);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  transform:translateX(-110%);
+  transition:transform .32s ease, opacity .32s ease;
+  opacity:0;
+  pointer-events:none;
+  overflow-y:auto;
+}
+[data-theme="light"] .ns-mobile-drawer { background: rgba(255,255,255,.98); }
+.ns-mobile-drawer.open { transform:translateX(0); opacity:1; pointer-events:auto; }
+.ns-mobile-drawer-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+.ns-mobile-drawer-header span { font-family:'Orbitron',monospace; font-size:1rem; font-weight:900; color:var(--t1); }
+.ns-mobile-drawer-close { width:44px; height:44px; border-radius:16px; border:none; background:rgba(255,255,255,.08); color:var(--t2); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s ease, transform .2s ease; }
+.ns-mobile-drawer-close:hover { transform:scale(1.02); background:rgba(255,255,255,.12); }
+[data-theme="light"] .ns-mobile-drawer-close { background:rgba(0,0,0,.05); }
+.ns-mobile-drawer-links { display:grid; gap:10px; }
+.ns-mobile-drawer-link { width:100%; text-align:left; padding:14px 16px; border-radius:18px; background:rgba(255,255,255,.05); color:var(--t2); border:1px solid transparent; font-family:'Rajdhani',sans-serif; font-size:.95rem; font-weight:700; text-transform:uppercase; cursor:pointer; transition:background .2s ease, border-color .2s ease, color .2s ease; }
+.ns-mobile-drawer-link:hover, .ns-mobile-drawer-link.active { background:rgba(204,17,17,.12); color:var(--t1); border-color:rgba(204,17,17,.28); }
+[data-theme="light"] .ns-mobile-drawer-link { background:rgba(0,0,0,.04); }
+[data-theme="light"] .ns-mobile-drawer-link.active { background:rgba(204,17,17,.08); color:#CC1111; }
+.ns-mobile-drawer-actions { display:grid; gap:10px; margin-top:18px; }
+.ns-mobile-tab { width:100%; padding:14px 16px; border-radius:18px; border:none; background:rgba(255,255,255,.08); color:var(--t2); cursor:pointer; font-family:'Rajdhani',sans-serif; font-size:.95rem; font-weight:700; text-transform:uppercase; transition:background .2s ease, color .2s ease, transform .2s ease; text-align:center; }
+.ns-mobile-tab:hover { background:rgba(255,255,255,.12); transform:translateY(-1px); }
+.ns-mobile-tab.active { color:var(--c1); background:rgba(204,17,17,.12); }
+[data-theme="light"] .ns-mobile-tab { background:rgba(0,0,0,.05); }
+[data-theme="light"] .ns-mobile-tab.active { color:#CC1111; background:rgba(204,17,17,.08); }
+.ns-mobile-backdrop { position:fixed; inset:0; z-index:12015; background:rgba(10,10,10,.45); backdrop-filter:blur(4px); }
+[data-theme="light"] .ns-mobile-backdrop { background:rgba(255,255,255,.30); }
 
 .hero-section {
   position:relative;

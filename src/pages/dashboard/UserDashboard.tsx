@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  Award, 
-  TrendingUp, 
-  Download, 
+import {
+  Calendar,
+  Award,
+  TrendingUp,
+  Download,
   Users,
   MessageSquare,
   FileText,
@@ -12,8 +12,18 @@ import {
   ArrowRight,
   BarChart3,
   PieChart,
-  ChevronRight
+  ChevronRight,
+  Trophy,
+  Target,
+  Brain,
+  Lightbulb
 } from 'lucide-react';
+
+const ACHIEVEMENT_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  Target,
+  Trophy,
+  MessageSquare,
+};
 
 interface Activity {
   id: string;
@@ -54,9 +64,9 @@ export default function UserDashboard() {
         { id: '3', type: 'achievement', title: 'First Event Attended', description: 'Earned "First Step" badge', date: new Date(Date.now() - 5 * 86400000) },
       ]);
       setAchievements([
-        { id: '1', title: 'First Event', description: 'Attended your first event', icon: '🎯', points: 50 },
-        { id: '2', title: 'Active Participant', description: 'Attended 5 events', icon: '🏆', points: 100 },
-        { id: '3', title: 'Community Builder', description: 'Posted 10 comments', icon: '💬', points: 75 },
+        { id: '1', title: 'First Event', description: 'Attended your first event', icon: 'Target', points: 50 },
+        { id: '2', title: 'Active Participant', description: 'Attended 5 events', icon: 'Trophy', points: 100 },
+        { id: '3', title: 'Community Builder', description: 'Posted 10 comments', icon: 'MessageSquare', points: 75 },
       ]);
       setMetrics({ eventsAttended: 8, commentsPosted: 24, contributionsMade: 12, totalPoints: 450, currentStreak: 5, longestStreak: 12 });
       setLoading(false);
@@ -199,7 +209,7 @@ export default function UserDashboard() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {achievements.map((achievement) => (
                   <div key={achievement.id} className="text-center p-4 bg-[#222222] rounded-xl hover:bg-[#2A2A2A] transition-all">
-                    <div className="text-4xl mb-2">{achievement.icon}</div>
+                    <div className="flex justify-center mb-2 text-[#CC1111]">{(() => { const I = ACHIEVEMENT_ICONS[achievement.icon]; return I ? <I size={36} /> : null; })()}</div>
                     <p className="font-medium text-white text-sm">{achievement.title}</p>
                     <p className="text-xs text-gray-500 mt-1">{achievement.description}</p>
                     <p className="text-xs text-[#CC1111] mt-2">{achievement.points} pts</p>
@@ -237,21 +247,21 @@ export default function UserDashboard() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-[#222222] rounded-lg p-4 hover:bg-[#2A2A2A] transition-all">
-              <h4 className="font-medium text-white">🤖 AI Workshop</h4>
+              <h4 className="font-medium text-white flex items-center gap-1"><Brain size={15} aria-hidden="true" /> AI Workshop</h4>
               <p className="text-sm text-gray-500 mt-1">Based on your interests</p>
               <button className="mt-3 text-sm text-[#CC1111] font-medium flex items-center gap-1">
                 Register <ArrowRight className="h-3 w-3" />
               </button>
             </div>
             <div className="bg-[#222222] rounded-lg p-4 hover:bg-[#2A2A2A] transition-all">
-              <h4 className="font-medium text-white">📝 Complete Profile</h4>
+              <h4 className="font-medium text-white flex items-center gap-1"><FileText size={15} aria-hidden="true" /> Complete Profile</h4>
               <p className="text-sm text-gray-500 mt-1">Earn 50 bonus points</p>
               <button className="mt-3 text-sm text-[#CC1111] font-medium flex items-center gap-1">
                 Complete <ArrowRight className="h-3 w-3" />
               </button>
             </div>
             <div className="bg-[#222222] rounded-lg p-4 hover:bg-[#2A2A2A] transition-all">
-              <h4 className="font-medium text-white">💡 Share Feedback</h4>
+              <h4 className="font-medium text-white flex items-center gap-1"><Lightbulb size={15} aria-hidden="true" /> Share Feedback</h4>
               <p className="text-sm text-gray-500 mt-1">Help us improve</p>
               <button className="mt-3 text-sm text-[#CC1111] font-medium flex items-center gap-1">
                 Share <ArrowRight className="h-3 w-3" />

@@ -200,6 +200,7 @@ export default function MembershipPage({ onBack }) {
   const [busy, setBusy]   = useState(false);
   const [done, setDone]   = useState(false);
   const [err,  setErr]    = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState('');
   const topRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -294,6 +295,7 @@ export default function MembershipPage({ onBack }) {
         throw new Error(data?.error || 'Membership form submission failed');
       }
 
+      setSubmittedEmail(payload.collegeEmail);
       setDone(true);
       scrollTop();
     } catch (e) {
@@ -361,14 +363,14 @@ export default function MembershipPage({ onBack }) {
             gap: 10,
           }}>
             {[
-              { icon: '🔐', label: 'Cybersecurity' },
-              { icon: '🤖', label: 'AI / Machine Learning' },
-              { icon: '🌐', label: 'Web Development' },
-              { icon: '☁️', label: 'Cloud & AWS' },
-              { icon: '📱', label: 'Android Development' },
-              { icon: '📢', label: 'Management & Events' },
-              { icon: '💼', label: 'Career & Placement' },
-              { icon: '🎨', label: 'Design & Media' },
+              { icon: 'ShieldCheck', label: 'Cybersecurity' },
+              { icon: 'Brain', label: 'AI / Machine Learning' },
+              { icon: 'Globe', label: 'Web Development' },
+              { icon: 'Cloud', label: 'Cloud & AWS' },
+              { icon: 'Smartphone', label: 'Android Development' },
+              { icon: 'Megaphone', label: 'Management & Events' },
+              { icon: 'Briefcase', label: 'Career & Placement' },
+              { icon: 'Palette', label: 'Design & Media' },
             ].map(d => (
               <div key={d.label} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
@@ -415,7 +417,7 @@ export default function MembershipPage({ onBack }) {
             padding: '12px 16px',
             display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           }}>
-            <span style={{ fontSize: '1.1rem' }}>🔗</span>
+            <span style={{ display: 'flex', color: 'var(--c2)' }}><DynamicIcon name="Link" size={20} /></span>
             <span style={{ fontSize: '.88rem', color: 'var(--t2)', flex: 1 }}>
               Before filling the form, please follow our official LinkedIn page:
             </span>
@@ -734,27 +736,60 @@ export default function MembershipPage({ onBack }) {
             {done ? (
               /* ── Success screen ── */
               <div style={{ display:'grid', gap:18 }}>
+                {/* ── Confirmation banner ── */}
                 <div style={{
                   background:'linear-gradient(135deg,rgba(123,111,255,.08),rgba(0,212,255,.06))',
                   border:'1px solid var(--bdr2)', borderRadius:'var(--r3)',
                   padding:22, position:'relative', overflow:'hidden', textAlign:'center',
                 }}>
                   <div className="corner-tl"/><div className="corner-br"/>
-                  <div style={{ fontSize:'2.4rem', marginBottom:14 }}>🚀</div>
+                  <div style={{ display:'flex', justifyContent:'center', marginBottom:14, color:'var(--c1)' }}><DynamicIcon name="Rocket" size={38} /></div>
                   <div style={{ fontFamily:'Orbitron,monospace', fontSize:'1rem', color:'var(--t1)', fontWeight:700, marginBottom:12 }}>
-                    Thank you for filling the NexaSphere Membership Form!
+                    Membership Form Submitted Successfully!
                   </div>
                   <p style={{ color:'var(--t2)', lineHeight:1.8, maxWidth:540, margin:'0 auto' }}>
-                    Your form has been successfully submitted. 🎉
-                    <br/><br/>
-                    Now request to join the NexaSphere WhatsApp group using the link below — and
-                    <b style={{ color:'var(--t1)' }}> mention that you have already filled the NexaSphere form</b>.
-                    <br/><br/>
-                    Our team will verify your responses and add you to the respective NexaSphere spaces/groups.
+                    Your response has been recorded. 🎉<br/>
+                    Submitted email: <b style={{ color:'var(--t1)' }}>{submittedEmail || form.collegeEmail}</b>
+                    <br/>
+                    If email notifications are enabled, a confirmation receipt will be sent there.
                   </p>
                 </div>
 
-                
+                {/* ── What happens next ── */}
+                <div style={{
+                  background:'var(--card)', border:'1px solid var(--bdr)',
+                  borderRadius:'var(--r3)', padding:'18px 20px',
+                  position:'relative', overflow:'hidden',
+                }}>
+                  <div className="corner-tl"/>
+                  <div style={{
+                    fontFamily:'Orbitron,monospace', fontSize:'.7rem',
+                    letterSpacing:'.16em', textTransform:'uppercase',
+                    color:'var(--c1)', marginBottom:14,
+                  }}>What Happens Next</div>
+                  <div style={{ display:'grid', gap:12 }}>
+                    {[
+                      { icon:'✅', title:'Step 1 — Join the community (Now)', desc:'Click the WhatsApp button below and request to join. When asked, mention you have already filled the NexaSphere Membership Form.' },
+                      { icon:'🔍', title:'Step 2 — Verification (3–5 working days)', desc:'Our team reviews your submission and verifies your college email. No action needed on your end.' },
+                      { icon:'💬', title:'Step 3 — You\'re added to domain groups', desc:'Once verified, you will be added to the respective NexaSphere WhatsApp domain groups you selected.' },
+                    ].map(s => (
+                      <div key={s.title} style={{
+                        display:'flex', gap:14, alignItems:'flex-start',
+                        padding:'12px 14px',
+                        background:'var(--card2)', border:'1px solid var(--bdr)',
+                        borderRadius:'var(--r2)',
+                      }}>
+                        <span style={{ fontSize:'1.2rem', flexShrink:0, marginTop:2 }}>{s.icon}</span>
+                        <div>
+                          <div style={{ fontFamily:'Rajdhani,sans-serif', fontWeight:700, color:'var(--t1)', fontSize:'.96rem', marginBottom:3 }}>{s.title}</div>
+                          <div style={{ fontSize:'.86rem', color:'var(--t2)', lineHeight:1.6 }}>{s.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── CTA buttons ── */}
                 <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
                   <a
                     className="btn btn-whatsapp"
@@ -778,12 +813,17 @@ export default function MembershipPage({ onBack }) {
                   </a>
                 </div>
 
+                {/* ── Footer note ── */}
                 <div style={{
                   background:'var(--card)', border:'1px solid var(--bdr)',
                   borderRadius:'var(--r2)', padding:'14px 16px',
                   fontSize:'.88rem', color:'var(--t3)', lineHeight:1.7, textAlign:'center',
                 }}>
-                  📌 Also make sure to follow the official NexaSphere LinkedIn page for updates.<br/>
+                  <DynamicIcon name="Pin" size={13} style={{display:'inline',verticalAlign:'-2px',marginRight:4}} /> Questions? Reach us at{' '}
+                  <a href="mailto:nexasphere@glbajajgroup.org" style={{ color:'var(--c1)', textDecoration:'none' }}>
+                    nexasphere@glbajajgroup.org
+                  </a>
+                  <br/>
                   <b style={{ color:'var(--t2)' }}>Stay connected and keep building 🚀 — NexaSphere Team</b>
                 </div>
               </div>

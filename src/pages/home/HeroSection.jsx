@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BRAND_LOGO_ICON } from '../../shared/brandAssets';
 import { IconArrowRight, IconSpark, DynamicIcon } from '../../shared/Icons';
 
@@ -92,7 +93,13 @@ function Logo3D({ ready, isLight }) {
 
 /* â”€â”€ Stats bar â”€â”€ */
 function StatsBar({ vis, isLight }) {
-  const items = [{v:'12',l:'Members',i:'Users'},{v:'8',l:'Activities',i:'Activity'},{v:'1',l:'Events Done',i:'Calendar'},{v:'∞',l:'Ideas',i:'Lightbulb'}];
+  const { t } = useTranslation();
+  const items = [
+    {v:'12',l:t('hero.stats.members'),i:'Users'},
+    {v:'8',l:t('hero.stats.activities'),i:'Activity'},
+    {v:'1',l:t('hero.stats.events_done'),i:'Calendar'},
+    {v:'∞',l:t('hero.stats.ideas'),i:'Lightbulb'}
+  ];
   return (
     <div style={{
       display:'flex',maxWidth:'500px',margin:'40px auto 0',
@@ -153,6 +160,7 @@ function Atmosphere({ isLight }) {
 }
 
 export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dark' }) {
+  const { t } = useTranslation();
   const [ready, setReady]     = useState(false);
   const [statsVis, setStatsVis] = useState(false);
   const isLight = theme === 'light';
@@ -199,7 +207,7 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
           animationName:'letterDrop',animationDuration:'.75s',animationDelay:'.5s',
           animationFillMode:'forwards',animationTimingFunction:'cubic-bezier(.22,1,.36,1)',opacity:1,
         }}>
-          GL Bajaj&apos;s Student-Driven Tech Ecosystem
+          {t('hero.tagline')}
           <span style={{animation:'blink 1s step-end infinite',color:'var(--c1)',marginLeft:'2px'}}>_</span>
         </p>
 
@@ -211,12 +219,12 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
           <div style={{display:'flex',gap:'12px',flexWrap:'wrap',justifyContent:'center'}}>
             <RippleBtn cls="btn-primary" onClick={() => onJoin ? onJoin() : onTabChange('Team')}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                Join as Member <IconArrowRight />
+                {t('hero.join_as_member')} <IconArrowRight />
               </span>
             </RippleBtn>
             <RippleBtn cls="btn-outline" onClick={()=>onTabChange('Team')}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                Core Team <IconArrowRight />
+                {t('hero.core_team')} <IconArrowRight />
               </span>
             </RippleBtn>
           </div>
@@ -228,11 +236,11 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
             borderRadius:'16px',maxWidth:'420px',textAlign:'center',
           }}>
             <p style={{fontSize:'.82rem',color:'var(--t2)',marginBottom:'10px',lineHeight:1.5}}>
-              Want to be part of the NexaSphere Core Team?
+              {t('hero.want_to_be_part')}
             </p>
             <RippleBtn cls="btn-join" onClick={()=> (onApply ? onApply() : onTabChange('Team'))}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                Apply for Core Team <IconSpark />
+                {t('hero.apply_for_core_team')} <IconSpark />
               </span>
             </RippleBtn>
           </div>
@@ -245,7 +253,7 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
       <div style={{position:'absolute',bottom:0,left:0,right:0,height:'150px',background:'linear-gradient(to bottom,transparent,var(--bg))',pointerEvents:'none',zIndex:2}}/>
       
       <div style={{position:'absolute',bottom:'16px',left:'50%',transform:'translateX(-50%)',zIndex:2,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',opacity:.42,animation:'float 2.5s ease-in-out infinite'}}>
-        <div style={{fontSize:'.56rem',color:isLight?'#78716c':'var(--t2)',letterSpacing:'.22em',fontFamily:"'Space Mono',monospace"}}>SCROLL</div>
+        <div style={{fontSize:'.56rem',color:isLight?'#78716c':'var(--t2)',letterSpacing:'.22em',fontFamily:"'Space Mono',monospace"}}>{t('hero.scroll')}</div>
         <div className="scroll-indicator-line" style={{width:'1px',height:'28px',background:`linear-gradient(to bottom,var(--c1),transparent)`}}/>
       </div>
     </section>

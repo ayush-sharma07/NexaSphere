@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { MessageCircle, ExternalLink, Mail } from 'lucide-react';
 
 const WHATSAPP       = 'https://chat.whatsapp.com/Jjc5cuUKENu0RC1vWSEs20';
 const LINKEDIN       = 'https://www.linkedin.com/showcase/glbajaj-nexasphere/';
 const NEXASPHERE_EMAIL = 'nexasphere@glbajajgroup.org';
 
-const values = ['Innovation','Collaboration','Learning','Growth','Community','Technology','Career','Mentorship'];
-
 export default function AboutSection() {
+  const { t } = useTranslation();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  const values = [
+    t('about.values_list.innovation'),
+    t('about.values_list.collaboration'),
+    t('about.values_list.learning'),
+    t('about.values_list.growth'),
+    t('about.values_list.community'),
+    t('about.values_list.technology'),
+    t('about.values_list.career'),
+    t('about.values_list.mentorship')
+  ];
 
   useEffect(()=>{
     const obs=new IntersectionObserver(entries=>{
@@ -37,8 +49,8 @@ export default function AboutSection() {
       <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:'480px',height:'480px',borderRadius:'50%',background:'radial-gradient(circle,rgba(123,111,255,.03) 0%,transparent 70%)',pointerEvents:'none'}}/>
       <div className="container" style={{position:'relative',zIndex:1}}>
         <div>
-          <h2 className="section-title pop-word">About NexaSphere</h2>
-          <p className="section-subtitle pop-in" style={{animationDelay:'.1s'}}>Building Tomorrow&apos;s Tech Leaders Today</p>
+          <h2 className="section-title pop-word">{t('about.title')}</h2>
+          <p className="section-subtitle pop-in" style={{animationDelay:'.1s'}}>{t('about.subtitle')}</p>
         </div>
 
         <div style={{
@@ -51,16 +63,14 @@ export default function AboutSection() {
         }}>
           <div>
             <p className="about-text pop-left" style={{animationDelay:'.08s'}}>
-              <strong style={{color:'var(--c1)'}}>NexaSphere</strong> is a student-driven tech ecosystem at{' '}
-              <strong style={{color:'var(--c2)'}}>GL Bajaj Group of Institutions, Mathura</strong>.
-              Founded to bridge the gap between academic learning and real-world technology, we run hackathons, workshops, knowledge-sharing sessions, and career guidance events.
+              <strong style={{color:'var(--c1)'}}>NexaSphere</strong> {t('about.desc_1').split('NexaSphere').slice(1).join('NexaSphere') || t('about.desc_1')}
             </p>
             <p className="about-text pop-left" style={{marginTop:'12px',animationDelay:'.16s'}}>
-              From peer-led Knowledge Sharing Sessions and hands-on workshops to Industry Insider career guidance and competitive hackathons — NexaSphere runs events that connect curiosity with real opportunity, all year round.
+              {t('about.desc_2')}
             </p>
             
             <div className="pop-left" style={{marginTop:'16px',animationDelay:'.22s'}}>
-              <div style={{fontFamily:'Orbitron,monospace',fontSize:'.7rem',color:'var(--c1)',fontWeight:700,letterSpacing:'.1em',marginBottom:'4px',textTransform:'uppercase'}}>Contact Us</div>
+              <div style={{fontFamily:'Orbitron,monospace',fontSize:'.7rem',color:'var(--c1)',fontWeight:700,letterSpacing:'.1em',marginBottom:'4px',textTransform:'uppercase'}}>{t('about.contact_us')}</div>
               <a href={`mailto:${NEXASPHERE_EMAIL}`} style={{color:'var(--c1)',fontSize:'.88rem',fontWeight:600}}>{NEXASPHERE_EMAIL}</a>
             </div>
           </div>
@@ -72,7 +82,7 @@ export default function AboutSection() {
             >
               <div style={{position:'absolute',top:'-14px',right:'-14px',width:'90px',height:'90px',background:'radial-gradient(circle,rgba(0,212,255,.07),transparent)',borderRadius:'50%',pointerEvents:'none'}}/>
               <div className="corner-tl"/><div className="corner-br"/>
-              <div style={{fontFamily:'Orbitron,monospace',fontSize:'.7rem',color:'var(--c1)',fontWeight:700,letterSpacing:'.1em',marginBottom:'13px',textTransform:'uppercase'}}>Our Values</div>
+              <div style={{fontFamily:'Orbitron,monospace',fontSize:'.7rem',color:'var(--c1)',fontWeight:700,letterSpacing:'.1em',marginBottom:'13px',textTransform:'uppercase'}}>{t('about.our_values')}</div>
               <div style={{display:'flex',flexWrap:'wrap',gap:'6px'}}>
                 {values.map(v=>(
                   <span key={v} style={{
@@ -93,12 +103,11 @@ export default function AboutSection() {
         </div>
 
         <div className="about-actions pop-in" style={{animationDelay:'.28s'}}>
-          <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp">💬 Join WhatsApp</a>
-          <a href={LINKEDIN} target="_blank" rel="noopener noreferrer" className="btn btn-linkedin">🔗 LinkedIn</a>
-          <a href={`mailto:${NEXASPHERE_EMAIL}`} className="btn btn-outline">📧 Email Us</a>
+          <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp"><MessageCircle size={16} aria-hidden="true" /> {t('about.actions.join_whatsapp')}</a>
+          <a href={LINKEDIN} target="_blank" rel="noopener noreferrer" className="btn btn-linkedin"><ExternalLink size={16} aria-hidden="true" /> {t('about.actions.linkedin')}</a>
+          <a href={`mailto:${NEXASPHERE_EMAIL}`} className="btn btn-outline"><Mail size={16} aria-hidden="true" /> {t('about.actions.email_us')}</a>
         </div>
       </div>
     </section>
   );
 }
-

@@ -5,6 +5,7 @@ import TeamMemberModal from './TeamMemberModal';
 import { IconArrowRight, IconSpark } from '../../shared/Icons';
 import { BannerOrbs } from '../../shared/MotionLayer';
 import Footer from '../../shared/Footer';
+import SkeletonCard from '../../components/SkeletonCard';
 
 function MemberCard({ member, idx, onClick }) {
   const ref = useRef(null);
@@ -21,7 +22,13 @@ function MemberCard({ member, idx, onClick }) {
   };
   const onLeave = () => {
     const c = ref.current; if (!c) return;
-    c.style.transform = ''; c.style.animationPlayState = '';
+    // Set explicit reset transform first for a smooth animation transition
+    c.style.transform = 'translateY(0) rotateX(0deg) rotateY(0deg) scale(1)';
+    c.style.animationPlayState = '';
+    // Clear out custom transforms to let global breathing animation keyframes resume
+    setTimeout(() => {
+      if (c) c.style.transform = '';
+    }, 150);
   };
   const click = () => {
     const c = ref.current;
@@ -31,13 +38,14 @@ function MemberCard({ member, idx, onClick }) {
 
   return (
     <div ref={ref}
-      className="team-card shimmer mag-card"
+      className="team-card shimmer mag-card pop-flip"
       style={{
         cursor: 'pointer', perspective: '800px',
         animation: `ag 7s ease-in-out ${agDelays[idx % 12]}s infinite`,
         willChange: 'transform',
         animationFillMode: 'both',
         opacity: 1,
+        animationDelay: `${idx * 0.08}s`
       }}
       onMouseMove={onMove} onMouseLeave={onLeave} onClick={click}
       role="button" tabIndex={0}
@@ -66,14 +74,28 @@ function MemberCard({ member, idx, onClick }) {
 export default function TeamPage({ onBack, onApply }) {
   const [sel, setSel] = useState(null);
   const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { window.scrollTo({ top: 0 }); }, []);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('fired');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -10px 0px' });
+    document.querySelectorAll('#team-page .pop-in, #team-page .pop-flip, #team-page .pop-word, #team-page .pop-scale').forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     let alive = true;
     const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
     const url = base ? `${base}/api/content/team` : '/api/content/team';
     
+    setLoading(true);
     fetch(url)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
@@ -82,7 +104,10 @@ export default function TeamPage({ onBack, onApply }) {
           setMembers(data.members);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
     return () => { alive = false; };
   }, []);
 
@@ -111,11 +136,11 @@ export default function TeamPage({ onBack, onApply }) {
           fontFamily: "'Rajdhani', sans-serif", fontWeight: 600,
         }}>← Back</button>
 
-        <span className="cin-section-label" style={{ display: 'block', textAlign: 'center', marginBottom: '8px', fontFamily: "'Space Mono', monospace", fontSize: '.6rem', color: 'var(--t3)', letterSpacing: '.3em', textTransform: 'uppercase', position:'relative',zIndex:1 }}>
+        <span className="cin-section-label pop-in" style={{ display: 'block', textAlign: 'center', marginBottom: '8px', fontFamily: "'Space Mono', monospace", fontSize: '.6rem', color: 'var(--t3)', letterSpacing: '.3em', textTransform: 'uppercase', position:'relative',zIndex:1 }}>
           GL Bajaj Group of Institutions · Mathura
         </span>
-        <h1 className="section-title" style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', position:'relative',zIndex:1 }}>Core Team</h1>
-        <p className="section-subtitle" style={{ maxWidth: '500px', margin: '0 auto', position:'relative',zIndex:1 }}>
+        <h1 className="section-title pop-word" style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', position:'relative',zIndex:1 }}>Core Team</h1>
+        <p className="section-subtitle pop-in" style={{ maxWidth: '500px', margin: '0 auto', position:'relative',zIndex:1 }}>
           The minds and hands behind NexaSphere — meet the people driving the vision forward.
         </p>
       </div>
@@ -134,7 +159,13 @@ export default function TeamPage({ onBack, onApply }) {
             <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, var(--bdr2), transparent)' }} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
-            {organiser.map((m, i) => <MemberCard key={m.id} member={m} idx={i} onClick={setSel} />)}
+            {loading ? (
+              Array.from({ length: 2 }).map((_, i) => (
+                <SkeletonCard key={i} type="team" />
+              ))
+            ) : (
+              organiser.map((m, i) => <MemberCard key={m.id} member={m} idx={i} onClick={setSel} />)
+            )}
           </div>
         </div>
 
@@ -151,7 +182,13 @@ export default function TeamPage({ onBack, onApply }) {
             <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, var(--bdr2), transparent)' }} />
           </div>
           <div className="team-grid">
-            {coreTeam.map((m, i) => <MemberCard key={m.id} member={m} idx={i + 2} onClick={setSel} />)}
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonCard key={i} type="team" />
+              ))
+            ) : (
+              coreTeam.map((m, i) => <MemberCard key={m.id} member={m} idx={i + 2} onClick={setSel} />)
+            )}
           </div>
         </div>
 

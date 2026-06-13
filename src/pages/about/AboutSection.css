@@ -41,11 +41,6 @@
   }
 }
 
-.about-text {
-  font-size: 1.05rem;
-  line-height: 1.7;
-}
-
 .about-strong-red {
   color: var(--c1);
 }
@@ -72,20 +67,6 @@
   color: var(--c1);
   font-size: 0.88rem;
   font-weight: 600;
-}
-
-.about-card-inner {
-  position: relative;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 30px;
-  transition: all 0.28s ease;
-}
-
-.about-card-inner:hover {
-  border-color: var(--c1b);
-  box-shadow: var(--sh1);
 }
 
 .about-card-glow {
@@ -126,10 +107,3 @@
   transform: translateY(-2px);
 }
 
-.about-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 20px;
-}
