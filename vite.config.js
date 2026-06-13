@@ -60,8 +60,8 @@ export default defineConfig({
   server: {
     port: 5175,
     proxy: {
-      '/api': 'http://localhost:3001',
-      '/healthz': 'http://localhost:3001',
+      '/api': 'http://localhost:8080',
+      '/healthz': 'http://localhost:8080',
     },
   },
 })
