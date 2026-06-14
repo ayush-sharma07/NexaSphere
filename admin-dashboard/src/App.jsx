@@ -1,3 +1,4 @@
+import RealTimeDashboard from './pages/RealTimeDashboard';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { auth } from './services/auth';
 import { Sidebar } from './components/Sidebar';
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/dashboard/events" element={<EventsManager />} />
             <Route path="/dashboard/activity-events" element={<ActivityEventsManager />} />
             <Route path="/dashboard/core-team" element={<CoreTeamManager />} />
+            <Route path="/dashboard/analytics" element={<RealTimeDashboard />} />
             <Route path="/dashboard/membership" element={<MembershipResponsesManager />} />
             <Route path="/dashboard/recruitment" element={<RecruitmentResponsesManager />} />
           </Route>

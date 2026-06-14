@@ -1,122 +1,36 @@
-import 'dotenv/config';
-
-if (!process.env.ADMIN_EVENT_PASSWORD && process.env.NODE_ENV !== 'test') {
-  throw new Error('FATAL: ADMIN_EVENT_PASSWORD environment variable is required but not set.');
-}
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
+import { createServer } from 'http';
+import { initializeSocketIO } from './config/socket.js';
 import { google } from 'googleapis';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import { EventEmitter } from 'events';
 import { sendWelcomeVerificationEmail } from './services/emailService.js';
 import { ZodError } from 'zod';
-import { EventEmitter } from 'events';
 import { normalizeFormSubmission } from './validators/formSchemas.js';
-import { adminAuthMiddleware } from './middleware/adminAuthMiddleware.js';
-import { createRateLimiter, parsePositiveInteger } from './middleware/rateLimiter.js';
-import analyticsRouter from './routes/analytics.js';
-
-// Import required controllers and services
+import { eventsService as eventsServiceModule } from './services/eventsService.js';
 import * as eventsController from './controllers/eventsController.js';
 import * as activityEventsController from './controllers/activityEventsController.js';
+import { coreTeamService } from './services/coreTeamService.js';
 import * as coreTeamController from './controllers/coreTeamController.js';
 import * as formsController from './controllers/formsController.js';
-import { eventsService } from './services/eventsService.js';
-import { coreTeamService } from './services/coreTeamService.js';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import analyticsRouter from './routes/analytics.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 const CONTENT_FILE = path.join(__dirname, 'data', 'content.json');
 
+const { adminAuthMiddleware } = await import('./middleware/adminAuthMiddleware.js');
+
 const app = express();
-const adminEvents = new EventEmitter();
-
-const DEFAULT_CORS_ORIGINS = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'https://nexasphere-glbajaj.vercel.app',
-  'https://admin-nexasphere.vercel.app',
-  'https://nexa-sphere-sigma.vercel.app',
-  'https://admin-dashboard-navy-pi-22.vercel.app',
-];
-
-function parseAllowedOrigins(rawValue) {
-  const source = rawValue && rawValue.trim() ? rawValue : DEFAULT_CORS_ORIGINS.join(',');
-  const origins = source
-    .split(',')
-    .map((value) => value.trim())
-    .filter((value) => value && value !== '*');
-
-  return origins.length > 0 ? [...new Set(origins)] : DEFAULT_CORS_ORIGINS;
-}
-
-const allowedOrigins = parseAllowedOrigins(process.env.CORS_ORIGIN);
-
-app.use(helmet({
-  contentSecurityPolicy: {
-    useDefaults: true,
-    directives: {
-      'default-src': ["'self'"],
-      'base-uri': ["'self'"],
-      'object-src': ["'none'"],
-      'frame-ancestors': ["'none'"],
-      'img-src': ["'self'", 'data:'],
-      'font-src': ["'self'", 'data:'],
-      'style-src': ["'self'", "'unsafe-inline'"],
-      'script-src': ["'self'", "'unsafe-inline'"],
-      'connect-src': ["'self'"],
-      'form-action': ["'self'"],
-    },
-  },
-  hsts: process.env.NODE_ENV === 'production'
-    ? {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true,
-      }
-    : false,
-  referrerPolicy: {
-    policy: 'no-referrer',
-  },
-  frameguard: {
-    action: 'deny',
-  },
-}));
-
-const contentRateLimit = createRateLimiter({
-  windowMs: parsePositiveInteger(process.env.CONTENT_RATE_LIMIT_WINDOW_MS, 5 * 60 * 1000),
-  max: parsePositiveInteger(process.env.CONTENT_RATE_LIMIT_MAX, 120),
-  message: 'Too many content requests. Please slow down and try again later.',
-  keyPrefix: 'content',
-});
-
-const formRateLimit = createRateLimiter({
-  windowMs: parsePositiveInteger(process.env.FORM_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
-  max: parsePositiveInteger(process.env.FORM_RATE_LIMIT_MAX, 30),
-  message: 'Too many submission requests. Please wait before trying again.',
-  keyPrefix: 'forms',
-});
-
-const adminLoginRateLimit = createRateLimiter({
-  windowMs: parsePositiveInteger(process.env.ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
-  max: parsePositiveInteger(process.env.ADMIN_LOGIN_RATE_LIMIT_MAX, 10),
-  message: 'Too many admin login requests. Please wait and try again.',
-  keyPrefix: 'admin-login',
-});
 
 app.use(cors({
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-      return;
-    }
-
-    callback(new Error(`CORS policy does not allow this origin: ${origin}`));
-  },
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((value) => value.trim()).filter(Boolean) : true,
   credentials: false,
 }));
 app.use(express.json({ limit: '512kb' }));
@@ -145,6 +59,7 @@ function requestLogger(req, res, next) {
 app.use(requestLogger);
 
 const adminAuth = adminAuthMiddleware.requireAdmin;
+const adminEvents = new EventEmitter();
 adminEvents.on('CORE_TEAM_MEMBER_ADDED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_ADDED:`, event));
 adminEvents.on('CORE_TEAM_MEMBER_REMOVED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_REMOVED:`, event));
 
@@ -263,6 +178,9 @@ function sanitizeEvent(input = {}) {
 function normalizePhone(value) {
   return String(value || '').replace(/[^\d]/g, '');
 }
+
+app.on('CORE_TEAM_MEMBER_ADDED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_ADDED:`, event));
+app.on('CORE_TEAM_MEMBER_REMOVED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_REMOVED:`, event));
 
 async function listEventsStore() {
   if (HAS_SUPABASE) {
@@ -575,14 +493,9 @@ function isPhoneish(s) {
 }
 
 app.get('/healthz', async (req, res) => {
-  const events = await eventsService.listEvents();
+  const events = await eventsServiceModule.listEvents();
   res.json({ ok: true, events: events.length, storage: HAS_SUPABASE ? 'supabase' : 'file' });
 });
-
-app.use('/api/content', contentRateLimit);
-app.use('/api/forms', formRateLimit);
-app.use('/api/submissions', formRateLimit);
-app.use('/api/core-team/apply', formRateLimit);
 
 app.get('/api/content/events', eventsController.listEvents);
 
@@ -590,7 +503,7 @@ app.get('/api/content/activity-events/:activityKey', activityEventsController.li
 app.post('/api/content/activity-events/:activityKey', activityEventsController.addActivityEvent);
 app.delete('/api/content/activity-events/:activityKey/:eventId', activityEventsController.deleteActivityEvent);
 
-app.post('/api/admin/login', adminLoginRateLimit, adminAuthMiddleware.login);
+app.post('/api/admin/login', adminAuthMiddleware.login);
 app.post('/api/admin/logout', adminAuthMiddleware.logout);
 app.use('/api/admin/analytics', adminAuth, analyticsRouter);
 
@@ -599,21 +512,10 @@ app.post('/api/admin/events', adminAuth, eventsController.adminCreateEvent);
 app.put('/api/admin/events/:id', adminAuth, eventsController.adminUpdateEvent);
 app.delete('/api/admin/events/:id', adminAuth, eventsController.adminDeleteEvent);
 
-app.get('/api/content/team', async (req, res) => {
+app.get('/api/content/core-team', async (req, res) => {
   try {
-    const rawMembers = await coreTeamService.listMembers();
-    const members = (rawMembers || []).map(m => {
-      let email = m.email || null;
-      if (email && !email.toLowerCase().endsWith('@glbajajgroup.org')) {
-        email = null; // hide personal emails entirely
-      }
-      return {
-        ...m,
-        email,
-        whatsapp: 'https://chat.whatsapp.com/FhpJEaod2g419jFMfqrhGZ' // official community link
-      };
-    });
-    return res.json({ members });
+    const members = await coreTeamService.listMembers();
+    return res.json(members);
   } catch (e) {
     return res.status(500).json({ error: e?.message || 'Failed to load core team' });
   }
@@ -623,31 +525,30 @@ app.get('/api/admin/core-team', adminAuth, coreTeamController.adminListCoreTeamM
 app.post('/api/admin/core-team', adminAuth, coreTeamController.adminAddCoreTeamMember);
 app.delete('/api/admin/core-team/:id', adminAuth, coreTeamController.adminDeleteCoreTeamMember);
 
+app.get('/api/admin/core-team', adminAuth, coreTeamController.adminListCoreTeamMembers);
+app.post('/api/admin/core-team', adminAuth, coreTeamController.adminAddCoreTeamMember);
+app.delete('/api/admin/core-team/:id', adminAuth, coreTeamController.adminDeleteCoreTeamMember);
+
 app.post('/api/forms/membership', formsController.makeHandleForm('membership'));
 app.post('/api/forms/recruitment', formsController.makeHandleForm('recruitment'));
 app.post('/api/core-team/apply', formsController.makeHandleForm('core_team'));
 
-app.post('/api/submissions/membership', formsController.makeHandleForm('membership'));
-app.post('/api/submissions/recruitment', formsController.makeHandleForm('recruitment'));
 
-// Centralized error handling (must be registered last)
-app.use(notFoundHandler);
-app.use(errorHandler);
 
 const port = Number(process.env.PORT || 8787);
-if (process.env.NODE_ENV !== 'test' && !process.env.SKIP_SERVER_LISTEN) {
-  if (!process.env.VERCEL) {
-    const boot = HAS_SUPABASE ? Promise.resolve() : ensureContentFile();
-    boot.then(() => {
-      app.listen(port, () => {
-        console.log(`NexaSphere server listening on http://localhost:${port}`);
-      });
-    });
-  } else {
-    app.listen(port, () => {
+if (!process.env.VERCEL) {
+  const boot = HAS_SUPABASE ? Promise.resolve() : ensureContentFile();
+  boot.then(() => {
+    const httpServer = createServer(app);
+    initializeSocketIO(httpServer);
+    httpServer.listen(port, () => {
       console.log(`NexaSphere server listening on http://localhost:${port}`);
     });
-  }
+  });
+} else {
+  app.listen(port, () => {
+    console.log(`NexaSphere server listening on http://localhost:${port}`);
+  });
 }
 
 export default app;

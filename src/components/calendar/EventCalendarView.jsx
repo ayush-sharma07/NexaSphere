@@ -3,7 +3,6 @@ import { Calendar, MapPin, Check } from 'lucide-react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
 
 export default function EventCalendarView({ events, onEventClick }) {
   const [calendarEvents, setCalendarEvents] = useState([]);
@@ -264,7 +263,7 @@ END:VCALENDAR`;
       `}</style>
 
       <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin]}
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',

@@ -3,24 +3,6 @@ import { auth } from './auth';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
 
-// --- LOCAL STORAGE OFFLINE DATABASE HELPERS ---
-const getDb = (key, fallback) => {
-  try {
-    const val = localStorage.getItem(`ns_db_${key}`);
-    return val ? JSON.parse(val) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
-const setDb = (key, val) => {
-  try {
-    localStorage.setItem(`ns_db_${key}`, JSON.stringify(val));
-  } catch (e) {
-    console.error('Error writing to localStorage:', e);
-  }
-};
-
 async function fetchWithAuth(url, options = {}) {
   // If we are using the mock token (offline mode), bypass fetch entirely
   const isOffline = auth.getToken() === 'mock-jwt-token-for-nexasphere-admin';
@@ -137,6 +119,26 @@ async function fetchWithAuth(url, options = {}) {
       }
     }, 300); // simulate slight network delay
   });
+
+  const res = await fetch(`${API_BASE}${url}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${auth.getToken()}`,
+      ...options.headers,
+    },
+  });
+
+  if (res.status === 401) {
+    eventEmitter.emit(EVENTS.AUTH_TOKEN_EXPIRED);
+    throw new Error('Session expired');
+  }
+  if (res.status === 204) return null;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Request failed (${res.status})`);
+  }
+  return res.json();
 }
 
 export const api = {
@@ -179,24 +181,7 @@ export const api = {
   coreTeam: {
     getAll: async () => {
       const result = await fetchWithAuth('/api/admin/core-team');
-      const members = result?.members ?? (Array.isArray(result) ? result : null) ?? [];
-
-      // Check schema version migration logic to ensure local team data is safe
-      const dbVersion = localStorage.getItem('ns_team_db_version') || '0';
-      if (dbVersion === '0') {
-        // Initial setup or migration
-        const seeded = getDb('core_team', []);
-        if (seeded.length === 0 && members.length > 0) {
-          setDb('core_team', members);
-        }
-        localStorage.setItem('ns_team_db_version', '1');
-      }
-
-      if (members.length === 0) {
-        const seeded = getDb('core_team', []);
-        return { members: seeded };
-      }
-      return { members };
+      return { members: result?.members ?? [] };
     },
     add: async (member) => {
       const result = await fetchWithAuth('/api/admin/core-team', { method: 'POST', body: JSON.stringify(member) });
